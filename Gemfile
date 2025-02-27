@@ -2,7 +2,13 @@ source "https://rubygems.org"
 
 ruby "3.2.2"
 
-gem 'dotenv-rails', groups: [:development, :test]
+gem "dotenv-rails", groups: [:development, :test]
+
+gem "devise"
+
+gem "rack-cors"
+
+gem "jsonapi-serializer"
 
 # Bundle edge Rails instead: gem "rails", github: "rails/rails", branch: "main"
 gem "rails", "~> 7.1.5", ">= 7.1.5.1"
