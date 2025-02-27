@@ -5,6 +5,6 @@ class Admin < ApplicationRecord
   devise :database_authenticatable, :recoverable,
          :rememberable, :validatable
 
-  #associations                    
- has_many :notifications, as: :user
+  # associations
+  has_many :notifications, as: :user
 end
