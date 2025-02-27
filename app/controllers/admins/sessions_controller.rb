@@ -1,5 +1,3 @@
-# frozen_string_literal: true
-
 class Admins::SessionsController < Devise::SessionsController
   respond_to :json
 
@@ -10,9 +8,9 @@ class Admins::SessionsController < Devise::SessionsController
   def set_flash_message!(key, kind, options = {})
     # Do nothing as flash is not available in API-only apps
   end
-    
+
   private
-  
+
   def respond_with(resource, _opts = {})
     if resource.persisted?
       render json: {
@@ -25,12 +23,12 @@ class Admins::SessionsController < Devise::SessionsController
       }, status: :unauthorized
     end
   end
-  
+
   def respond_to_on_destroy
     if current_admin
       render json: {
         status: 200,
-        message: "Admin logged out successfully."
+        message: 'Admin logged out successfully.'
       }
     else
       render json: {
@@ -39,5 +37,4 @@ class Admins::SessionsController < Devise::SessionsController
       }, status: :unauthorized
     end
   end
-  
 end

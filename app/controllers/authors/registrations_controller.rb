@@ -1,8 +1,6 @@
-# frozen_string_literal: true
-
 class Authors::RegistrationsController < Devise::RegistrationsController
   respond_to :json
-  
+
   def set_flash_message(key, kind, options = {})
     # Do nothing as flash is not available in API-only apps
   end
@@ -10,7 +8,7 @@ class Authors::RegistrationsController < Devise::RegistrationsController
   def set_flash_message!(key, kind, options = {})
     # Do nothing as flash is not available in API-only apps
   end
-  
+
   private
 
   def respond_with(resource, _opts = {})
@@ -33,5 +31,4 @@ class Authors::RegistrationsController < Devise::RegistrationsController
   def account_update_params
     params.require(:author).permit(:name, :email, :password, :password_confirmation, :current_password)
   end
-  
 end
