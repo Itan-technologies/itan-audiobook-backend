@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2025_02_27_121350) do
+ActiveRecord::Schema[7.1].define(version: 2025_02_27_211904) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pgcrypto"
   enable_extension "plpgsql"
@@ -44,4 +44,68 @@ ActiveRecord::Schema[7.1].define(version: 2025_02_27_121350) do
     t.index ["reset_password_token"], name: "index_authors_on_reset_password_token", unique: true
   end
 
+  create_table "books", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
+    t.uuid "author_id", null: false
+    t.string "title"
+    t.text "description"
+    t.string "edition_number"
+    t.string "contributors"
+    t.integer "primary_audience"
+    t.boolean "publishing_rights"
+    t.integer "duration"
+    t.integer "status"
+    t.integer "ebook_price"
+    t.integer "audiobook_price"
+    t.string "unique_book_id"
+    t.string "unique_audio_id"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["author_id"], name: "index_books_on_author_id"
+    t.index ["unique_audio_id"], name: "index_books_on_unique_audio_id", unique: true
+    t.index ["unique_book_id"], name: "index_books_on_unique_book_id", unique: true
+  end
+
+  create_table "chapters", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
+    t.uuid "book_id", null: false
+    t.string "title"
+    t.text "content"
+    t.integer "duration"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["book_id"], name: "index_chapters_on_book_id"
+  end
+
+  create_table "notifications", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
+    t.string "user_type", null: false
+    t.uuid "user_id", null: false
+    t.text "message"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["user_type", "user_id"], name: "index_notifications_on_user"
+  end
+
+  create_table "purchases", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
+    t.uuid "book_id", null: false
+    t.integer "amount"
+    t.string "content_type"
+    t.string "purchase_status"
+    t.datetime "purchase_date", precision: nil
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["book_id"], name: "index_purchases_on_book_id"
+  end
+
+  create_table "reviews", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
+    t.integer "rating"
+    t.text "comment"
+    t.uuid "book_id", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["book_id"], name: "index_reviews_on_book_id"
+  end
+
+  add_foreign_key "books", "authors"
+  add_foreign_key "chapters", "books"
+  add_foreign_key "purchases", "books"
+  add_foreign_key "reviews", "books"
 end
