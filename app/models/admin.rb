@@ -4,4 +4,7 @@ class Admin < ApplicationRecord
   # :confirmable, :lockable, :timeoutable, :trackable and :omniauthable
   devise :database_authenticatable, :recoverable,
          :rememberable, :validatable
+
+  # associations
+  has_many :notifications, as: :user
 end
