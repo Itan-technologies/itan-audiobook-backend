@@ -49,5 +49,10 @@ module ItanAudiobookBackend
     config.middleware.use ActionDispatch::Flash
     config.middleware.use ActionDispatch::Cookies
     config.middleware.use ActionDispatch::Session::CookieStore
+
+    config.action_dispatch.default_headers.merge!(
+      'Access-Control-Allow-Origin' => ENV['FRONTENT_DOMAIN'],
+      'Access-Control-Allow-Credentials' => 'true'
+    )
   end
 end
