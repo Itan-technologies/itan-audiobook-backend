@@ -4,7 +4,7 @@ class AuthorMailer < Devise::Mailer
   default from: 'omololuayk@gmail.com'
 
   def confirmation_instructions(record, token, opts = {})
-    @confirmation_url = "#{ENV['FRONTEND_DOMAIN']}/auth/confirm?token=#{token}&email=#{record.email}"
+    @confirmation_url = "#{ENV['FRONTEND_DOMAIN']}/auth/confirm?confirmation_token=#{token}&email=#{record.email}"
     super
   end
 end
