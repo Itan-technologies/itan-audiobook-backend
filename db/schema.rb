@@ -10,10 +10,38 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2025_02_27_211904) do
+ActiveRecord::Schema[7.1].define(version: 2025_03_05_031957) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pgcrypto"
   enable_extension "plpgsql"
+
+  create_table "active_storage_attachments", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
+    t.string "name", null: false
+    t.string "record_type", null: false
+    t.uuid "record_id", null: false
+    t.uuid "blob_id", null: false
+    t.datetime "created_at", null: false
+    t.index ["blob_id"], name: "index_active_storage_attachments_on_blob_id"
+    t.index ["record_type", "record_id", "name", "blob_id"], name: "index_active_storage_attachments_uniqueness", unique: true
+  end
+
+  create_table "active_storage_blobs", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
+    t.string "key", null: false
+    t.string "filename", null: false
+    t.string "content_type"
+    t.text "metadata"
+    t.string "service_name", null: false
+    t.bigint "byte_size", null: false
+    t.string "checksum"
+    t.datetime "created_at", null: false
+    t.index ["key"], name: "index_active_storage_blobs_on_key", unique: true
+  end
+
+  create_table "active_storage_variant_records", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
+    t.uuid "blob_id", null: false
+    t.string "variation_digest", null: false
+    t.index ["blob_id", "variation_digest"], name: "index_active_storage_variant_records_uniqueness", unique: true
+  end
 
   create_table "admins", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
     t.string "email", default: "", null: false
@@ -52,14 +80,20 @@ ActiveRecord::Schema[7.1].define(version: 2025_02_27_211904) do
     t.string "contributors"
     t.integer "primary_audience"
     t.boolean "publishing_rights"
-    t.integer "duration"
-    t.integer "status"
     t.integer "ebook_price"
     t.integer "audiobook_price"
     t.string "unique_book_id"
     t.string "unique_audio_id"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.boolean "ai_generated_image"
+    t.boolean "explicit_images"
+    t.string "subtitle"
+    t.text "bio"
+    t.string "categories"
+    t.string "keywords"
+    t.integer "book_isbn"
+    t.boolean "terms_and_conditions"
     t.index ["author_id"], name: "index_books_on_author_id"
     t.index ["unique_audio_id"], name: "index_books_on_unique_audio_id", unique: true
     t.index ["unique_book_id"], name: "index_books_on_unique_book_id", unique: true
@@ -104,6 +138,8 @@ ActiveRecord::Schema[7.1].define(version: 2025_02_27_211904) do
     t.index ["book_id"], name: "index_reviews_on_book_id"
   end
 
+  add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
+  add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
   add_foreign_key "books", "authors"
   add_foreign_key "chapters", "books"
   add_foreign_key "purchases", "books"
