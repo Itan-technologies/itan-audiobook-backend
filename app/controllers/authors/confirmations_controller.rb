@@ -40,6 +40,6 @@ class Authors::ConfirmationsController < Devise::ConfirmationsController
 
   # The path used after confirmation.
   def after_confirmation_path_for(_resource_name, _resource)
-    nil
+    ENV['EMAIL_CONFIRMATION_URL'] || root_path
   end
 end
