@@ -12,6 +12,7 @@ require "action_mailbox/engine"
 require "action_text/engine"
 require "action_view/railtie"
 require "action_cable/engine"
+require "dotenv/load"
 # require "rails/test_unit/railtie"
 
 # Require the gems listed in Gemfile, including any gems
@@ -44,6 +45,8 @@ module ItanAudiobookBackend
     # Middleware like session, flash, cookies can be added back manually.
     # Skip views, helpers and assets when generating a new resource.
     config.api_only = true
+
+    config.active_storage.variant_processor = :mini_magick
 
     config.middleware.use Rack::MethodOverride
     config.middleware.use ActionDispatch::Flash
