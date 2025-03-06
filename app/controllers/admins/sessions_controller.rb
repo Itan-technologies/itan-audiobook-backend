@@ -1,6 +1,9 @@
 class Admins::SessionsController < Devise::SessionsController
   respond_to :json
 
+  # Skip authentication check for the sign-out action
+  skip_before_action :verify_signed_out_user, only: :destroy
+
   def set_flash_message(key, kind, options = {})
     # Do nothing as flash is not available in API-only apps
   end
@@ -26,15 +29,13 @@ class Admins::SessionsController < Devise::SessionsController
 
   def respond_to_on_destroy
     if current_admin
-      render json: {
-        status: 200,
-        message: 'Admin logged out successfully.'
-      }
-    else
-      render json: {
-        status: 401,
-        message: "Couldn't find an active session."
-      }, status: :unauthorized
+      # Track successful logout if needed
+      logger.info "Admin #{current_admin.id} signed out successfully"
     end
+    
+    render json: {
+      status: 200,
+      message: 'Logged out successfully.'
+    }
   end
 end
