@@ -7,10 +7,17 @@
 #   ["Action", "Comedy", "Drama", "Horror"].each do |genre_name|
 #     MovieGenre.find_or_create_by!(name: genre_name)
 #   end
-Admin.create!(
-  email: 'admin@example.com',
-  password: 'password123@1',
-  password_confirmation: 'password123@1'
-)
+# Admin.create!(
+#   email: 'admin@example.com',
+#   password: 'password123@1',
+#   password_confirmation: 'password123@1'
+# )
 
-puts 'Admin seeded'
+# puts 'Admin seeded'
+
+book = Book.order(created_at: :desc).first
+puts "Book: #{book.title}"
+puts "Original dimensions: #{book.cover_image.metadata['width']}x#{book.cover_image.metadata['height']}"
+puts "Original URL: #{book.cover_image.url}"
+puts "Standard URL: #{book.standardized_cover_url}"
+puts "Thumbnail URL: #{book.cover_thumbnail_url}"
