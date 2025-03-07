@@ -14,6 +14,14 @@ gem "aws-sdk-s3", require: false
 
 gem 'mini_magick'
 
+gem 'pdf-reader'    # For PDF parsing
+
+gem 'epub-parser'   # For EPUB parsing
+
+gem 'httparty'          # For API requests
+
+gem 'sidekiq'       # For background processing
+
 # Bundle edge Rails instead: gem "rails", github: "rails/rails", branch: "main"
 gem 'rails', '~> 7.1.5', '>= 7.1.5.1'
 
