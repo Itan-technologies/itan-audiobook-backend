@@ -18,7 +18,9 @@ class Admins::SessionsController < Devise::SessionsController
     if resource.persisted?
       render json: {
         status: { code: 200, message: 'Admin logged in successfully.' },
-        data: AdminSerializer.new(resource).serializable_hash[:data][:attributes]
+        data: AdminSerializer.new(resource).serializable_hash[:data][:attributes].merge(
+        id: AdminSerializer.new(resource).serializable_hash[:data][:id]
+        )
       }
     else
       render json: {

@@ -8,7 +8,9 @@ class Api::V1::BooksController < ApplicationController
         @books = Book.includes(cover_image_attachment: :blob).order(created_at: :desc)
         render json: {
             status: {code: 200},
-            data: BookSerializer.new(@books).serializable_hash[:data].map { |book| book[:attributes] }
+            data: BookSerializer.new(@books).serializable_hash[:data].map { |book| 
+             book[:attributes].merge(id: book[:id]) 
+            }
         }
     end
 
@@ -16,7 +18,9 @@ class Api::V1::BooksController < ApplicationController
     def show
         render json: {
             status: { code: 200 },
-            data: BookSerializer.new(@book).serializable_hash[:data][:attributes]
+            data: BookSerializer.new(@book).serializable_hash[:data][:attributes].merge(
+            id: BookSerializer.new(@book).serializable_hash[:data][:id]
+                )
             }
     end
 

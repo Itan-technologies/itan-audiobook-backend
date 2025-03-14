@@ -18,7 +18,9 @@ class Authors::SessionsController < Devise::SessionsController
     if resource.persisted?
       render json: {
         status: { code: 200, message: 'Logged in successfully.' },
-        data: AuthorSerializer.new(resource).serializable_hash[:data][:attributes]
+        data: AuthorSerializer.new(resource).serializable_hash[:data][:attributes].merge(
+          id: AuthorSerializer.new(resource).serializable_hash[:data][:id]
+          )
       }
     else
       render json: {
