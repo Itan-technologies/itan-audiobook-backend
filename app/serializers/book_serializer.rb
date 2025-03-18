@@ -16,10 +16,24 @@ class BookSerializer
     end
 
     attribute :ebook_file_url do |book|
-        book.ebook_file.attached? ? book.ebook_file.url : nil
+        if book.ebook_file.attached?
+            begin
+            url_options = { host: "localhost:3000", protocol: "http" }
+            Rails.application.routes.url_helpers.rails_blob_url(book.ebook_file, url_options)
+            rescue
+            nil
+            end
+        end
     end
 
     attribute :audiobook_file_url do |book|
-        book.audiobook_file.attached? ? book.audiobook_file.url : nil
-    end    
+            if book.audiobook_file.attached?
+                begin
+                    url_options = { host: "localhost:3000", protocol: "http" }
+                    Rails.application.routes.url_helpers.rails_blob_url(book.audiobook_file, url_options)
+                rescue
+                    nil
+                end
+            end
+        end
 end
