@@ -35,19 +35,6 @@ Rails.application.configure do
   
   config.active_storage.direct_upload = false
 
-  # Ensure ActiveStorage has its own URL options
-  # config.after_initialize do
-  #   ActiveStorage::Current.url_options = {
-  #     host: "localhost:3000",
-  #     protocol: "http"
-  #   }
-  # end
-
-  # Rails.application.routes.default_url_options = {
-  #   host: "localhost:3000",
-  #   protocol: "http"
-  # }
-
   # Don't care if the mailer can't send.
   config.action_mailer.raise_delivery_errors = true
 
