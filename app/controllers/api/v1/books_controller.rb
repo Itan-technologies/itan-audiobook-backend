@@ -26,11 +26,20 @@ class Api::V1::BooksController < ApplicationController
 
     # POST /api/v1/books
     def create
+         if params[:book][:cover_image].present?
+            file = params[:book][:cover_image]
+            Rails.logger.info "File size: #{file.size}"
+            Rails.logger.info "Content type: #{file.content_type}"
+            Rails.logger.info "Original filename: #{file.original_filename}"
+        end
+
         @book = current_author.books.new(book_params)
         if @book.save
             render json: {
                 status: { code: 200, message: 'Book created successfully.' },
-                data: BookSerializer.new(@book).serializable_hash[:data][:attributes]
+                data: BookSerializer.new(@book).serializable_hash[:data][:attributes].merge(
+                id: BookSerializer.new(@book).serializable_hash[:data][:id]
+                )
                 }
         else
             render json: {
@@ -45,7 +54,9 @@ class Api::V1::BooksController < ApplicationController
         if @book.update(book_params)
         render json: {
             status: { code: 200, message: 'Book updated successfully.' },
-            data: BookSerializer.new(@book).serializable_hash[:data][:attributes]
+            data: BookSerializer.new(@book).serializable_hash[:data][:attributes].merge(
+            id: BookSerializer.new(@book).serializable_hash[:data][:id]
+            )
         }
         else
         render json: {
