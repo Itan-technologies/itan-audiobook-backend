@@ -18,34 +18,75 @@ class Book < ApplicationRecord
   validates :unique_audio_id, uniqueness: true, allow_nil: true
 
   # Add a method to get standardized cover
-  def standardized_cover_url
-    return nil unless cover_image.attached?
+  # def standardized_cover_url
+  #   return nil unless cover_image.attached?
     
-    # Check if already the right dimensions
-    if cover_image.metadata["width"] == 2560 && cover_image.metadata["height"] == 1600
-      # Already correct dimensions, just return normal URL
-      cover_image.url
-    else
-      # Return a variant URL instead of replacing the image
-      cover_image.variant(
-        resize_to_fill: [2560, 1600],
-        format: :jpg,
-        strip: true,
-        saver: { quality: 90 }
-      ).processed.url
+  #   # Check if already the right dimensions
+  #   if cover_image.metadata["width"] == 2560 && cover_image.metadata["height"] == 1600
+  #     # Already correct dimensions, just return normal URL
+  #     cover_image.url
+  #   else
+  #     # Return a variant URL instead of replacing the image
+  #     cover_image.variant(
+  #       resize_to_fill: [2560, 1600],
+  #       format: :jpg,
+  #       strip: true,
+  #       saver: { quality: 90 }
+  #     ).processed.url
+  #   end
+  # end
+
+    def standardized_cover_url
+      return nil unless cover_image.attached?
+      
+      begin
+        # Fix the method call
+        url_options = { host: "localhost:3000", protocol: "http" }
+        
+        # Use this syntax instead
+        Rails.application.routes.url_helpers.rails_representation_url(
+          cover_image.variant(resize_to_limit: [800, 600]),
+          url_options
+        )
+      rescue => e
+        Rails.logger.error "Error generating cover URL: #{e.message}"
+        nil
+      end
     end
-  end
+
 
   # Add smaller versions for different contexts
-  def cover_thumbnail_url
-    return nil unless cover_image.attached?
+  # def cover_thumbnail_url
+  #   return nil unless cover_image.attached?
     
-    cover_image.variant(
-      resize_to_fill: [300, 188],
-      format: :jpg,
-      strip: true,
-      saver: { quality: 80 }
-    ).processed.url
+  #   cover_image.variant(
+  #     resize_to_fill: [300, 188],
+  #     format: :jpg,
+  #     strip: true,
+  #     saver: { quality: 80 }
+  #   ).processed.url
+  # end
+
+  def cover_thumbnail_url
+      return nil unless cover_image.attached?
+      
+      begin
+        url_options = { host: "localhost:3000", protocol: "http" }
+        
+        # Use this syntax instead
+        Rails.application.routes.url_helpers.rails_representation_url(
+          cover_image.variant(
+            resize_to_fill: [300, 188],
+            format: :jpg,
+            strip: true,
+            saver: { quality: 80 }
+          ),
+          url_options
+        )
+      rescue => e
+        Rails.logger.error "Error generating thumbnail URL: #{e.message}"
+        nil
+      end
   end
 
   private
