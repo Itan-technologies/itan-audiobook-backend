@@ -36,24 +36,45 @@ class Book < ApplicationRecord
   #   end
   # end
 
-    def standardized_cover_url
-      return nil unless cover_image.attached?
+    # def standardized_cover_url
+    #   return nil unless cover_image.attached?
       
-      begin
-        # Fix the method call
-        url_options = { host: "localhost:3000", protocol: "http" }
+    #   begin
+    #     # Fix the method call
+    #     url_options = { host: "localhost:3000", protocol: "http" }
         
-        # Use this syntax instead
-        Rails.application.routes.url_helpers.rails_representation_url(
-          cover_image.variant(resize_to_limit: [800, 600]),
-          url_options
-        )
-      rescue => e
-        Rails.logger.error "Error generating cover URL: #{e.message}"
-        nil
-      end
+    #     # Use this syntax instead
+    #     Rails.application.routes.url_helpers.rails_representation_url(
+    #       cover_image.variant(resize_to_limit: [800, 600]),
+    #       url_options
+    #     )
+    #   rescue => e
+    #     Rails.logger.error "Error generating cover URL: #{e.message}"
+    #     nil
+    #   end
+    # end
+    def standardized_cover_url
+  return nil unless cover_image.attached?
+  
+  begin
+    if Rails.application.config.active_storage.service == :amazon
+      # For S3, we can use direct URLs without host options
+      cover_image.variant(
+        resize_to_limit: [800, 600]
+      ).processed.url
+    else
+      # For local storage, keep using the helper with URL options
+      url_options = { host: "localhost:3000", protocol: "http" }
+      Rails.application.routes.url_helpers.rails_representation_url(
+        cover_image.variant(resize_to_limit: [800, 600]),
+        url_options
+      )
     end
-
+  rescue => e
+    Rails.logger.error "Error generating cover URL: #{e.message}"
+    nil
+  end
+end
 
   # Add smaller versions for different contexts
   # def cover_thumbnail_url
@@ -67,27 +88,58 @@ class Book < ApplicationRecord
   #   ).processed.url
   # end
 
-  def cover_thumbnail_url
-      return nil unless cover_image.attached?
+  # def cover_thumbnail_url
+  #     return nil unless cover_image.attached?
       
-      begin
-        url_options = { host: "localhost:3000", protocol: "http" }
+  #     begin
+  #       url_options = { host: "localhost:3000", protocol: "http" }
         
-        # Use this syntax instead
-        Rails.application.routes.url_helpers.rails_representation_url(
-          cover_image.variant(
-            resize_to_fill: [300, 188],
-            format: :jpg,
-            strip: true,
-            saver: { quality: 80 }
-          ),
-          url_options
-        )
-      rescue => e
-        Rails.logger.error "Error generating thumbnail URL: #{e.message}"
-        nil
-      end
+  #       # Use this syntax instead
+  #       Rails.application.routes.url_helpers.rails_representation_url(
+  #         cover_image.variant(
+  #           resize_to_fill: [300, 188],
+  #           format: :jpg,
+  #           strip: true,
+  #           saver: { quality: 80 }
+  #         ),
+  #         url_options
+  #       )
+  #     rescue => e
+  #       Rails.logger.error "Error generating thumbnail URL: #{e.message}"
+  #       nil
+  #     end
+  # end
+
+  def cover_thumbnail_url
+  return nil unless cover_image.attached?
+  
+  begin
+    if Rails.application.config.active_storage.service == :amazon
+      # For S3, use direct URLs without host options
+      cover_image.variant(
+        resize_to_fill: [300, 188],
+        format: :jpg,
+        strip: true,
+        saver: { quality: 80 }
+      ).processed.url
+    else
+      # For local storage, use the helper with URL options
+      url_options = { host: "localhost:3000", protocol: "http" }
+      Rails.application.routes.url_helpers.rails_representation_url(
+        cover_image.variant(
+          resize_to_fill: [300, 188],
+          format: :jpg,
+          strip: true,
+          saver: { quality: 80 }
+        ),
+        url_options
+      )
+    end
+  rescue => e
+    Rails.logger.error "Error generating thumbnail URL: #{e.message}"
+    nil
   end
+end
 
   private
 
