@@ -8,18 +8,10 @@ class BookSerializer
                 :categories, :keywords, :book_isbn, :terms_and_conditions
 
     attribute :cover_image_url do |book|
-        book.cover_image.attached? ? book.standardized_cover_url : nil
-    end
-  
-    attribute :cover_thumbnail_url do |book|
-        book.cover_image.attached? ? book.cover_thumbnail_url : nil
+        Rails.application.routes.url_helpers.url_for(book.cover_image) if book.cover_image.attached?
     end
 
     attribute :ebook_file_url do |book|
-        book.ebook_file.attached? ? book.ebook_file.url : nil
+        Rails.application.routes.url_helpers.url_for(book.ebook_file) if book.ebook_file.attached?
     end
-
-    attribute :audiobook_file_url do |book|
-        book.audiobook_file.attached? ? book.audiobook_file.url : nil
-    end    
 end
