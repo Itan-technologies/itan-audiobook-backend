@@ -7,8 +7,15 @@
 
 Rails.application.config.middleware.insert_before 0, Rack::Cors do
   allow do
-    origins "http://localhost:8000"
+    origins "http://localhost:9000"
 
+    # Explicitly specify the ActiveStorage paths
+    resource "/rails/active_storage/direct_uploads",
+      headers: :any,
+      methods: [:post],
+      credentials: true,
+      expose: ['ETag']
+    
     resource "*",
       headers: :any,
       methods: [:get, :post, :put, :patch, :delete, :options, :head], 
