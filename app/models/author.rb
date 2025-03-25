@@ -9,10 +9,12 @@ class Author < ApplicationRecord
   validates :email, presence: true,
                     format: { with: URI::MailTo::EMAIL_REGEXP, message: 'must be a valid email address' },
                     uniqueness: { case_sensitive: false }
-  validates :first_name, :last_name, presence: true
   validates :phone_number, format: { with: /\A\+?[\d\s\-\(\)]+\z/, allow_blank: true }
   
   # associations
   has_many :notifications, as: :user
   has_many :books
+
+  #Active storage attachment
+  has_one_attached :author_profile_image
 end
