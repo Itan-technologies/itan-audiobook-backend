@@ -34,7 +34,7 @@ class Authors::ProfilesController < ApplicationController
     end
 
     def profile_params
-        params.require(:author).permit(  :first_name, :last_name, :bio, :phone_number, :country, :location )                             
+        params.require(:author).permit(  :first_name, :last_name, :bio, :phone_number, :country, :location, :author_profile_image )                             
     end
     
 end
