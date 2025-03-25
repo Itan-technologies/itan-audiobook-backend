@@ -8,10 +8,29 @@ class BookSerializer
                 :categories, :keywords, :book_isbn, :terms_and_conditions
 
     attribute :cover_image_url do |book|
-        Rails.application.routes.url_helpers.url_for(book.cover_image) if book.cover_image.attached?
+        if book.cover_image.attached?
+        begin
+            Rails.application.routes.url_helpers.url_for(book.cover_image)
+        rescue StandardError => e
+            Rails.logger.error("Failed to generate cover image URL for book #{book.id}: #{e.message}")
+            nil
+        end
+        else
+            nil
+        end
     end
 
+
     attribute :ebook_file_url do |book|
-        Rails.application.routes.url_helpers.url_for(book.ebook_file) if book.ebook_file.attached?
+        if book.ebook_file.attached?
+        begin
+            Rails.application.routes.url_helpers.url_for(book.ebook_file)
+        rescue StandardError => e
+            Rails.logger.error("Failed to generate ebook file URL for book #{book.id}: #{e.message}")
+            nil
+        end
+        else
+            nil
+        end
     end
 end
