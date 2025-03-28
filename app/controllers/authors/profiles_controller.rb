@@ -6,11 +6,17 @@ class Authors::ProfilesController < ApplicationController
        update_profile('profile created successfully')
     end
 
-    def show             
-            render json: {
-                status: {code: 200 },
+    def show
+        render json: {
+                status: {code: 200, message: "Profile successfully displayed"},
                 data: AuthorSerializer.new(current_author).serializable_hash[:data][:attributes]
             }
+        rescue StandardError => e
+        Rails.logger.error("profile not displayed: #{e.message}")
+        render json: {
+            status: {code: 422, message:"Unable to display profile"}
+        }, status: :unprocessable_entity
+        end
     end
 
     def update
@@ -38,3 +44,4 @@ class Authors::ProfilesController < ApplicationController
     end
     
 end
+
