@@ -1,5 +1,6 @@
-# app/controllers/api/v1/authors/two_factor_controller.rb
-class Api::V1::Authors::TwoFactorController < ApplicationController
+require 'twilio-ruby'
+
+class Api::V1::Authors::TwoFactorsController < ApplicationController
   before_action :authenticate_author!
   
   # Get 2FA status for the current author
