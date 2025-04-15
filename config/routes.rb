@@ -15,11 +15,17 @@ Rails.application.routes.draw do
   # API Routes
   namespace :api do
     namespace :v1 do
-      resources :books
+      resources :books do
+        collection do
+          get :my_books
+        end
+      end
       resources :admins
-     namespace :authors do
+     
+      namespace :authors do
         resource :profile, only: [:show, :update, :create]
       end
+
       resources :purchases do
         collection do
           post :verify 

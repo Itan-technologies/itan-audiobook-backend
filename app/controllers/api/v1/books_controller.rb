@@ -6,12 +6,13 @@ class Api::V1::BooksController < ApplicationController
     # GET /api/v1/books
     def index
         @books = Book.includes(cover_image_attachment: :blob).order(created_at: :desc)
-        render json: {
-            status: {code: 200},
-            data: BookSerializer.new(@books).serializable_hash[:data].map { |book| 
-             book[:attributes] 
-            }
-        }
+        render_books_json(@books)
+    end
+
+    # GET /api/v1/books/my_books
+    def my_books      
+      @books = current_author.books.includes(cover_image_attachment: :blob).order(created_at: :desc)
+      render_books_json(@books)
     end
 
     # GET /api/v1/books/:id
@@ -92,6 +93,13 @@ class Api::V1::BooksController < ApplicationController
 
 
     private
+
+    def render_books_json(books)
+      render json: {
+        status: {code: 200},
+        data: BookSerializer.new(books).serializable_hash[:data].map { |book| book[:attributes] }
+      }
+    end
 
     #Used to manage error, record not found
     def set_book
