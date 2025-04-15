@@ -14,6 +14,8 @@ gem "aws-sdk-s3", require: false
 
 gem 'mini_magick'
 
+gem 'httparty'
+
 # Bundle edge Rails instead: gem "rails", github: "rails/rails", branch: "main"
 gem 'rails', '~> 7.1.5', '>= 7.1.5.1'
 

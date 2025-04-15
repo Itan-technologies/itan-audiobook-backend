@@ -1,4 +1,4 @@
-class Admins::SessionsController < Devise::SessionsController
+class Api::V1::Authors::SessionsController < Devise::SessionsController
   respond_to :json
 
   # Skip authentication check for the sign-out action
@@ -17,22 +17,22 @@ class Admins::SessionsController < Devise::SessionsController
   def respond_with(resource, _opts = {})
     if resource.persisted?
       render json: {
-        status: { code: 200, message: 'Admin logged in successfully.' },
-        data: AdminSerializer.new(resource).serializable_hash[:data][:attributes].merge(
-        id: AdminSerializer.new(resource).serializable_hash[:data][:id]
-        )
+        status: { code: 200, message: 'Logged in successfully.' },
+        data: AuthorSerializer.new(resource).serializable_hash[:data][:attributes].merge(
+          id: AuthorSerializer.new(resource).serializable_hash[:data][:id]
+          )
       }
     else
       render json: {
-        status: { code: 401, message: "Admin couldn't be found." }
+        status: { code: 401, message: "Author couldn't be found." }
       }, status: :unauthorized
     end
   end
 
   def respond_to_on_destroy
-    if current_admin
+    if current_author
       # Track successful logout if needed
-      logger.info "Admin #{current_admin.id} signed out successfully"
+      logger.info "Author #{current_author.id} signed out successfully"
     end
     
     render json: {

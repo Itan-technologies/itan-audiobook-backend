@@ -1,31 +1,34 @@
 Rails.application.routes.draw do
  
   devise_for :authors, controllers: {
-  sessions: 'authors/sessions',
-  registrations: 'authors/registrations',
-  confirmations: 'authors/confirmations'
-  }, defaults: { format: :json }
+  sessions: 'api/v1/authors/sessions',
+  registrations: 'api/v1/authors/registrations',
+  confirmations: 'api/v1/authors/confirmations'
+  }, defaults: { format: :json },
+     path: 'api/v1/authors'
 
   devise_for :admins, controllers: {
-  sessions: 'admins/sessions'
-  }, skip: [:registrations]
+  sessions: 'api/v1/admins/sessions'
+  }, skip: [:registrations],
+     path: 'api/v1/admins'
   
   # API Routes
   namespace :api do
     namespace :v1 do
       resources :books
-      
-      # Additional book routes (if needed)
-      # get 'books/featured', to: 'books#featured'
-      # get 'books/search', to: 'books#search'
+      resources :admins
+     namespace :authors do
+        resource :profile, only: [:show, :update, :create]
+      end
+      resources :purchases do
+        collection do
+          post :verify 
+        end 
+      end      
     end
   end
 
-  post '/direct_uploads', to: 'direct_uploads#create'
-
-  namespace :authors do
-    resource :profile, only: [:show, :update, :create]
-  end
+  resource :direct_uploads, only: [:create]
 
   # Define your application routes per the DSL in https://guides.rubyonrails.org/routing.html
 

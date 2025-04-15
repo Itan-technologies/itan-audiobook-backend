@@ -1,4 +1,4 @@
-class Authors::RegistrationsController < Devise::RegistrationsController
+class Api::V1::Authors::RegistrationsController < Devise::RegistrationsController
   respond_to :json
 
   def set_flash_message(key, kind, options = {})

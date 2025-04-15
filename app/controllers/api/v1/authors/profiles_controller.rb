@@ -1,4 +1,4 @@
-class Authors::ProfilesController < ApplicationController
+class Api::V1::Authors::ProfilesController < ApplicationController
     before_action :authenticate_author!
 
     # POST authors/profile
