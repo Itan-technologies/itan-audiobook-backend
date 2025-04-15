@@ -366,7 +366,7 @@ DEPENDENCIES
   rack-cors
   rails (~> 7.1.5, >= 7.1.5.1)
   rubocop (>= 1.0, < 2.0)
-  twilio-ruby
+  twilio-ruby (~> 7.5, >= 7.5.2)
   tzinfo-data
 
 RUBY VERSION

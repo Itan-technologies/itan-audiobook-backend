@@ -2,7 +2,7 @@ source 'https://rubygems.org'
 
 ruby '3.2.2'
 
-gem 'dotenv-rails', groups: %i[development test]
+gem 'dotenv-rails'
 
 gem 'devise'
 
@@ -18,7 +18,7 @@ gem 'httparty'
 
 gem 'devise-two-factor'  # For TOTP (Time-based One-Time Password)
 
-gem 'twilio-ruby'        # For SMS-based 2FA
+gem 'twilio-ruby', '~> 7.5', '>= 7.5.2'        # For SMS-based 2FA
 
 # Bundle edge Rails instead: gem "rails", github: "rails/rails", branch: "main"
 gem 'rails', '~> 7.1.5', '>= 7.1.5.1'
