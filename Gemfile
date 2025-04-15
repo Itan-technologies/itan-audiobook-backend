@@ -16,6 +16,10 @@ gem 'mini_magick'
 
 gem 'httparty'
 
+gem 'devise-two-factor'  # For TOTP (Time-based One-Time Password)
+
+gem 'twilio-ruby'        # For SMS-based 2FA
+
 # Bundle edge Rails instead: gem "rails", github: "rails/rails", branch: "main"
 gem 'rails', '~> 7.1.5', '>= 7.1.5.1'
 
