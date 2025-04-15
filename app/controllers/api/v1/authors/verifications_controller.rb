@@ -1,4 +1,3 @@
-# app/controllers/api/v1/authors/verifications_controller.rb
 class Api::V1::Authors::VerificationsController < ApplicationController
   # Verify 2FA code during login
   def verify
