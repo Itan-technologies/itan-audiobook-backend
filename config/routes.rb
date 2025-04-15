@@ -30,11 +30,12 @@ Rails.application.routes.draw do
         collection do
           post :verify 
         end 
-      end      
+      end 
+      
+      resource :direct_uploads, only: [:create]
     end
   end
 
-  resource :direct_uploads, only: [:create]
 
   # Define your application routes per the DSL in https://guides.rubyonrails.org/routing.html
 
