@@ -3,7 +3,8 @@ Rails.application.routes.draw do
   devise_for :authors, controllers: {
   sessions: 'api/v1/authors/sessions',
   registrations: 'api/v1/authors/registrations',
-  confirmations: 'api/v1/authors/confirmations'
+  confirmations: 'api/v1/authors/confirmations',
+  passwords: 'api/v1/authors/passwords'
   }, defaults: { format: :json },
      path: 'api/v1/authors'
 
