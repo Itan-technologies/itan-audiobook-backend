@@ -15,8 +15,7 @@ class Api::V1::Authors::ProfilesController < ApplicationController
         Rails.logger.error("profile not displayed: #{e.message}")
         render json: {
             status: {code: 422, message:"Unable to display profile"}
-        }, status: :unprocessable_entity
-        end
+        }, status: :unprocessable_entity        
     end
 
     def update
