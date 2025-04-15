@@ -16,6 +16,7 @@ Rails.application.routes.draw do
   # API Routes
   namespace :api do
     namespace :v1 do
+
       resources :books do
         collection do
           get :my_books
@@ -25,6 +26,21 @@ Rails.application.routes.draw do
      
       namespace :authors do
         resource :profile, only: [:show, :update, :create]
+      end
+
+      # Verification endpoints
+      namespace :authors do
+        post 'verify', to: 'verifications#verify'
+        post 'resend_code', to: 'verifications#resend'
+        
+        # Add 2FA management endpoints
+        resource :two_factor, only: [] do
+          get :status
+          post :enable_email
+          post :setup_sms
+          post :verify_sms
+          delete :disable
+        end
       end
 
       resources :purchases do
