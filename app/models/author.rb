@@ -3,7 +3,8 @@ class Author < ApplicationRecord
   # Include default devise modules. Others available are:
   # :confirmable, :lockable, :timeoutable, :trackable and :omniauthable
   devise :database_authenticatable, :registerable,
-         :recoverable, :rememberable, :validatable, :confirmable
+         :recoverable, :rememberable, :validatable, :confirmable,
+         :omniauthable, omniauth_providers: [:google_oauth2]
 
   # Email validation
   validates :email, presence: true,
@@ -65,6 +66,25 @@ class Author < ApplicationRecord
       send_code_via_sms(code)
     else
       send_code_via_email(code)
+    end
+  end
+
+  # Add this method for OAuth functionality
+  def self.from_omniauth(auth)
+    where(provider: auth.provider, uid: auth.uid).first_or_create do |author|
+      author.email = auth.info.email
+      author.password = Devise.friendly_token[0, 20]
+      author.first_name = auth.info.first_name
+      author.last_name = auth.info.last_name
+      
+      # If you want to store profile image from Google
+      if auth.info.image
+        downloaded_image = URI.open(auth.info.image)
+        author.author_profile_image.attach(
+          io: downloaded_image,
+          filename: "google_profile_image.jpg"
+        )
+      end
     end
   end
 
