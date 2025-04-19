@@ -20,6 +20,13 @@ gem 'devise-two-factor'  # For TOTP (Time-based One-Time Password)
 
 gem 'twilio-ruby', '~> 7.5', '>= 7.5.2'        # For SMS-based 2FA
 
+# For OAuth authentication
+gem 'omniauth'
+
+gem 'omniauth-google-oauth2'
+
+gem 'omniauth-rails_csrf_protection' # Prevents CSRF attacks
+
 # Bundle edge Rails instead: gem "rails", github: "rails/rails", branch: "main"
 gem 'rails', '~> 7.1.5', '>= 7.1.5.1'
 
