@@ -3,9 +3,7 @@ class AuthorSerializer
 
   attributes :id, :email, :created_at, :first_name, :last_name, 
              :bio, :phone_number, :country, :location, :created_at,
-             :updated_at, :two_factor_enabled, :preferred_2fa_method, 
-             :phone_verified, :two_factor_code, :two_factor_code_expires_at,
-             :two_factor_attempts
+             :updated_at, :two_factor_enabled, :preferred_2fa_method             
 
   attribute :author_profile_image_url do |author|
   if author.author_profile_image.attached?
