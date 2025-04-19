@@ -4,7 +4,8 @@ Rails.application.routes.draw do
   sessions: 'api/v1/authors/sessions',
   registrations: 'api/v1/authors/registrations',
   confirmations: 'api/v1/authors/confirmations',
-  passwords: 'api/v1/authors/passwords'
+  passwords: 'api/v1/authors/passwords',
+  omniauth_callbacks: 'api/v1/authors/omniauth_callbacks'
   }, defaults: { format: :json },
      path: 'api/v1/authors'
 
@@ -22,6 +23,7 @@ Rails.application.routes.draw do
           get :my_books
         end
       end
+
       resources :admins
      
       namespace :authors do
