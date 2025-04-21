@@ -27,20 +27,23 @@ Rails.application.routes.draw do
       resources :admins
      
       namespace :authors do
-        resource :profile, only: [:show, :update, :create]
+        
       end
 
-      # Verification endpoints
       namespace :authors do
+         # Profile management
+        resource :profile, only: [:show, :update, :create]
+
+        # Verification endpoints
         post 'verify', to: 'verifications#verify'
         post 'resend_code', to: 'verifications#resend'
         
         # Add 2FA management endpoints
         resource :two_factor, only: [] do
           get :status
-          post :enable_email
-          post :setup_sms
-          post :verify_sms
+          post :enable_email # Email-based 2FA activation
+          post :setup_sms # Begin SMS-based 2FA setup
+          post :verify_sms # Complete SMS verification
           delete :disable
         end
       end

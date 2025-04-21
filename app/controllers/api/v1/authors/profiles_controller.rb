@@ -39,7 +39,8 @@ class Api::V1::Authors::ProfilesController < ApplicationController
     end
 
     def profile_params
-        params.require(:author).permit(  :first_name, :last_name, :bio, :phone_number, :country, :location, :author_profile_image, :two_factor_enabled, :preferred_2fa_method )                             
+        params.require(:author).permit(  :first_name, :last_name, :bio, :phone_number, :country, :location, :author_profile_image, :two_factor_enabled, :preferred_2fa_method )                          
+                                                                 
     end
     
 end

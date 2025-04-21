@@ -53,7 +53,7 @@ class Api::V1::Authors::TwoFactorsController < ApplicationController
     end
   end
   
-  # Verify SMS setup
+  # Verify SMS setup, verifies the verification code
   def verify_sms
     if current_author.valid_two_factor_code?(params[:verification_code])
       current_author.update(
