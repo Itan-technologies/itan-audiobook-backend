@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2025_04_16_162559) do
+ActiveRecord::Schema[7.1].define(version: 2025_04_25_032817) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pgcrypto"
   enable_extension "plpgsql"
@@ -141,6 +141,22 @@ ActiveRecord::Schema[7.1].define(version: 2025_04_16_162559) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index ["book_id"], name: "index_purchases_on_book_id"
+  end
+
+  create_table "readers", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
+    t.string "email", default: "", null: false
+    t.string "encrypted_password", default: "", null: false
+    t.string "reset_password_token"
+    t.datetime "reset_password_sent_at"
+    t.datetime "remember_created_at"
+    t.string "first_name"
+    t.string "last_name"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.string "jti", null: false
+    t.index ["email"], name: "index_readers_on_email", unique: true
+    t.index ["jti"], name: "index_readers_on_jti", unique: true
+    t.index ["reset_password_token"], name: "index_readers_on_reset_password_token", unique: true
   end
 
   create_table "reviews", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
