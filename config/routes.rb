@@ -1,5 +1,5 @@
 Rails.application.routes.draw do
- 
+
   devise_for :authors, controllers: {
   sessions: 'api/v1/authors/sessions',
   registrations: 'api/v1/authors/registrations',
@@ -14,6 +14,12 @@ Rails.application.routes.draw do
   }, skip: [:registrations],
      path: 'api/v1/admins'
   
+  devise_for :readers, controllers: {
+    sessions: 'api/v1/readers/sessions',
+    registrations: 'api/v1/readers/registrations'
+  }, defaults: { format: :json },
+     path: 'api/v1/readers'
+     
   # API Routes
   namespace :api do
     namespace :v1 do
@@ -26,10 +32,6 @@ Rails.application.routes.draw do
 
       resources :admins
      
-      namespace :authors do
-        
-      end
-
       namespace :authors do
          # Profile management
         resource :profile, only: [:show, :update, :create]
@@ -46,6 +48,10 @@ Rails.application.routes.draw do
           post :verify_sms # Complete SMS verification
           delete :disable
         end
+      end
+
+      namespace :readers do
+        resource :profile, only: [:show, :update, :create]
       end
 
       resources :purchases do
