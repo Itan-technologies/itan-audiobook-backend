@@ -44,4 +44,3 @@ class Api::V1::Authors::ProfilesController < ApplicationController
     end
     
 end
-
