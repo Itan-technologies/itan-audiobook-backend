@@ -13,7 +13,7 @@ class Author < ApplicationRecord
   validates :phone_number, format: { with: /\A\+?[\d\s\-\(\)]+\z/, allow_blank: true }
   
   # associations
-  has_many :notifications, as: :user
+  has_many :notifications
   has_many :books
 
   #Active storage attachment
