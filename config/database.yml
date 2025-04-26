@@ -25,7 +25,11 @@ default: &default
 
 development:
   <<: *default
-  database: itan_audiobook_backend_development
+  database: itan_ebook
+  username: postgres
+  password: Itan-db-key
+  host: itan-db-02.c1sgqmmau9ng.eu-north-1.rds.amazonaws.com
+  port: 5432
 
   # The specified database role being used to connect to PostgreSQL.
   # To create additional roles in PostgreSQL see `$ createuser --help`.
@@ -83,6 +87,11 @@ test:
 #
 production:
   <<: *default
-  database: itan_audiobook_backend_production
-  username: itan_audiobook_backend
-  password: <%= ENV["ITAN_AUDIOBOOK_BACKEND_DATABASE_PASSWORD"] %>
+  adapter: postgresql
+  encoding: unicode
+  pool: <%= ENV.fetch("RAILS_MAX_THREADS") { 5 } %>
+  database: <%= ENV['RDS_DB_NAME'] %>
+  username: <%= ENV['RDS_USERNAME'] %>
+  password: <%= ENV['RDS_PASSWORD'] %>
+  host: <%= ENV['RDS_HOSTNAME'] %>
+  port: <%= ENV['RDS_PORT'] %>
