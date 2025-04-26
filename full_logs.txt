@@ -1,0 +1,3 @@
+Retrieving logs...
+Logs were saved to C:\Users\USER\Documents\itan-audiobook-backend\.elasticbeanstalk\logs\250426_191818
+Logs were saved to C:\Users\USER\Documents\itan-audiobook-backend\.elasticbeanstalk\logs\250426_191818
