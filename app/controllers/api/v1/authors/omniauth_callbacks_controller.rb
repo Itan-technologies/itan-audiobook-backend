@@ -43,6 +43,7 @@ class Api::V1::Authors::OmniauthCallbacksController < Devise::OmniauthCallbacksC
     render json: {
       status: { code: 422, message: 'Google authentication failed' }
     }, status: :unprocessable_entity
+    end
   end
 
   # Handle general OAuth failures

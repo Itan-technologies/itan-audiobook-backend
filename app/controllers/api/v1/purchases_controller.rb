@@ -51,10 +51,11 @@ class Api::V1::PurchasesController < ApplicationController
                 reference: result[:data]["reference"]
             }
         }
-    else 
-        render json: {
+        else 
+            render json: {
             status: false,
             message: result[:error]
         }, status: :unprocessable_entity      
+        end
     end
 end
