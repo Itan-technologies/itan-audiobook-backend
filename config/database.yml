@@ -83,4 +83,7 @@ test:
 #
 production:
   <<: *default
-  ur: <%= ENV["DATABASE_URL"] %>
+  database: itan_audiobook_backend_production
+  username: postgres
+  password: <%= ENV["APP_PASSWORD"] %>
+  url: <%= ENV['DATABASE_URL'] %>
