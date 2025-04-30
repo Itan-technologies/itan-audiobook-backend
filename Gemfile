@@ -12,15 +12,15 @@ gem 'jsonapi-serializer'
 
 gem 'rubocop', '>= 1.0', '< 2.0'
 
-gem "aws-sdk-s3", require: false
+gem 'aws-sdk-s3', require: false
 
 gem 'mini_magick'
 
 gem 'httparty'
 
-gem 'devise-two-factor'  # For TOTP (Time-based One-Time Password)
+gem 'devise-two-factor' # For TOTP (Time-based One-Time Password)
 
-gem 'twilio-ruby', '~> 7.5', '>= 7.5.2'        # For SMS-based 2FA
+gem 'twilio-ruby', '~> 7.5', '>= 7.5.2' # For SMS-based 2FA
 
 # For OAuth authentication
 gem 'omniauth'
@@ -57,10 +57,10 @@ gem 'tzinfo-data', platforms: %i[windows jruby]
 gem 'bootsnap', require: false
 
 # Use Active Storage variants [https://guides.rubyonrails.org/active_storage_overview.html#transforming-images]
-gem "image_processing", "~> 1.2"
+gem 'image_processing', '~> 1.2'
 
 # Use Rack CORS for handling Cross-Origin Resource Sharing (CORS), making cross-origin Ajax possible
-gem "rack-cors"
+gem 'rack-cors'
 
 group :development, :test do
   # See https://guides.rubyonrails.org/debugging_rails_applications.html#debugging-with-the-debug-gem
@@ -70,5 +70,5 @@ end
 group :development do
   # Speed up commands on slow machines / big apps [https://github.com/rails/spring]
   # gem "spring"
-  gem "letter_opener"
+  gem 'letter_opener'
 end

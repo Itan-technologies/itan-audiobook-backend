@@ -3,14 +3,14 @@ class Api::V1::PurchasesController < ApplicationController
     debugger
     # Validate required parameters
     unless params[:email].present? && params[:book_id].present?
-      return render json: { 
-        status: "error", 
-        message: "Email and book_id are required" 
+      return render json: {
+        status: 'error',
+        message: 'Email and book_id are required'
       }, status: :unprocessable_entity
     end
 
     user_email = params[:email]
-    user_id = params[:user_id]        
+    params[:user_id]
 
     # Find a book
     begin
@@ -30,33 +30,33 @@ class Api::V1::PurchasesController < ApplicationController
         book_id: @book.id,
         content_type: 'application/pdf'
       },
-      callback_url: "#{ENV['FRONTEND_URL']}/payment/callback"
+      callback_url: "#{ENV.fetch('FRONTEND_URL', nil)}/payment/callback"
     )
 
     if result[:success]
-      purchase = Purchase.create!(
+      Purchase.create!(
         book: @book,
         amount: @book.ebook_price,
         content_type: 'ebook',
         purchase_status: 'pending',
         purchase_date: Time.now,
-        transaction_reference: result[:data]["reference"]
+        transaction_reference: result[:data]['reference']
       )
 
       render json: {
         status: true,
-        message: "Authorization URL created",
+        message: 'Authorization URL created',
         data: {
-          authorization_url: result[:data]["authorization_url"],
-          access_code: result[:data]["access_code"],
-          reference: result[:data]["reference"]
+          authorization_url: result[:data]['authorization_url'],
+          access_code: result[:data]['access_code'],
+          reference: result[:data]['reference']
         }
       }
-    else 
+    else
       render json: {
         status: false,
         message: result[:error]
-      }, status: :unprocessable_entity      
+      }, status: :unprocessable_entity
     end
   end
 end

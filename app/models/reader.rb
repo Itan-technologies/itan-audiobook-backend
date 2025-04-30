@@ -5,7 +5,7 @@ class Reader < ApplicationRecord
   devise :database_authenticatable, :registerable,
          :recoverable, :rememberable, :validatable,
          :jwt_authenticatable, jwt_revocation_strategy: self
-  
+
   before_create :set_jti
 
   has_many :books
@@ -19,4 +19,4 @@ class Reader < ApplicationRecord
   def set_jti
     self.jti ||= SecureRandom.uuid
   end
- end
+end

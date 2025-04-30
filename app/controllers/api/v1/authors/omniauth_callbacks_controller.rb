@@ -1,7 +1,7 @@
 class Api::V1::Authors::OmniauthCallbacksController < Devise::OmniauthCallbacksController
   # Google OAuth callback
   def google_oauth2
-    author = Author.from_omniauth(request.env["omniauth.auth"])
+    author = Author.from_omniauth(request.env['omniauth.auth'])
 
     if author.persisted?
       if author.two_factor_enabled
@@ -11,7 +11,7 @@ class Api::V1::Authors::OmniauthCallbacksController < Devise::OmniauthCallbacksC
         author.send_two_factor_code
 
         # Return partial sign-in response
-        return render json: {
+        render json: {
           status: {
             code: 202,
             message: "Verification code sent to your #{author.preferred_2fa_method}",
@@ -25,12 +25,12 @@ class Api::V1::Authors::OmniauthCallbacksController < Devise::OmniauthCallbacksC
 
         respond_to do |format|
           format.html { redirect_to after_sign_in_path_for(author) }
-          format.json { 
-            render json: { 
-              status: { code: 200, message: 'Signed in successfully' }, 
+          format.json do
+            render json: {
+              status: { code: 200, message: 'Signed in successfully' },
               data: AuthorSerializer.new(author).serializable_hash[:data][:attributes]
             }
-          }
+          end
         end
       end
     else

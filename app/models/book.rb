@@ -20,7 +20,7 @@ class Book < ApplicationRecord
   # Add a method to get standardized cover
   # def standardized_cover_url
   #   return nil unless cover_image.attached?
-    
+
   #   # Check if already the right dimensions
   #   if cover_image.metadata["width"] == 2560 && cover_image.metadata["height"] == 1600
   #     # Already correct dimensions, just return normal URL
@@ -39,7 +39,7 @@ class Book < ApplicationRecord
   # Add smaller versions for different contexts
   # def cover_thumbnail_url
   #   return nil unless cover_image.attached?
-    
+
   #   cover_image.variant(
   #     resize_to_fill: [300, 188],
   #     format: :jpg,
@@ -55,12 +55,12 @@ class Book < ApplicationRecord
     Book.transaction do
       # Use a faster query that only locks what we need
       last_number = Book.where.not(unique_book_id: nil)
-                     .order(created_at: :desc)
-                     .lock("FOR UPDATE")
-                     .limit(1)
-                     .pluck(:unique_book_id)
-                     .first&.gsub(/[^\d]/, '')&.to_i || 1000
-    
+        .order(created_at: :desc)
+        .lock('FOR UPDATE')
+        .limit(1)
+        .pluck(:unique_book_id)
+        .first&.gsub(/[^\d]/, '')&.to_i || 1000
+
       # Set both IDs using the same number but different prefixes
       next_number = last_number + 1
       self.unique_book_id = "BOO#{next_number}"

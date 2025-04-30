@@ -16,6 +16,6 @@ class AuthorMailer < Devise::Mailer
   def verification_code(author, code)
     @author = author
     @code = code
-    mail(to: author.email, subject: "Your Login Verification Code")
+    mail(to: author.email, subject: 'Your Login Verification Code')
   end
 end
