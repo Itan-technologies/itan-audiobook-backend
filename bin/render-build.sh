@@ -9,5 +9,3 @@ chmod +x bin/rails
 
 # Run database migrations
 bin/rails db:migrate
-
-
