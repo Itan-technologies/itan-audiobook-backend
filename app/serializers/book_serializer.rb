@@ -18,7 +18,6 @@ class BookSerializer
     end
   end
 
-
   attribute :ebook_file_url do |book|
     if book.ebook_file.attached?
       begin
