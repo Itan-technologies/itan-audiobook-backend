@@ -1,4 +1,4 @@
-class Authors::ConfirmationsController < Devise::ConfirmationsController
+class Api::V1::Authors::ConfirmationsController < Devise::ConfirmationsController
   respond_to :json
 
   # GET /resource/confirmation?confirmation_token=abcdef

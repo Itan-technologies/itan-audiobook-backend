@@ -31,7 +31,29 @@ Rails.application.configure do
 
   # Store uploaded files on the local file system (see config/storage.yml for options).
   config.active_storage.service = :amazon
+
+  # Added to send emails
+  config.action_mailer.perform_deliveries = true
+  config.action_mailer.raise_delivery_errors = true
+  config.action_mailer.delivery_method = :smtp
+  config.action_mailer.default_url_options = { host: ENV['MAIL_HOST'] } 
+  
+  config.action_mailer.smtp_settings = {
+    address:       'smtp.gmail.com',
+    port:          587,
+    domain:         ENV['MAIL_HOST'], 
+    user_name:      ENV['SENDMAIL_USERNAME'],
+    password:       ENV['APP_SPEC_PASSWORD'],
+    authentication: :plain,
+    enable_starttls_auto: true,
+    openssl_verify_mode: 'none',
+    open_timeout: 5.minutes,
+    read_timeout: 5.minutes
+  }
+
   config.active_storage.direct_upload = true
+
+  Rails.application.routes.default_url_options[:host] = 'your-production-domain.com'
 
   # Mount Action Cable outside main process or domain.
   # config.action_cable.mount_path = nil

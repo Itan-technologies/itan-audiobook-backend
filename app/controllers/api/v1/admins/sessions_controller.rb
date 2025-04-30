@@ -1,4 +1,4 @@
-class Admins::SessionsController < Devise::SessionsController
+class Api::V1::Admins::SessionsController < Devise::SessionsController
   respond_to :json
 
   # Skip authentication check for the sign-out action
@@ -19,7 +19,7 @@ class Admins::SessionsController < Devise::SessionsController
       render json: {
         status: { code: 200, message: 'Admin logged in successfully.' },
         data: AdminSerializer.new(resource).serializable_hash[:data][:attributes].merge(
-        id: AdminSerializer.new(resource).serializable_hash[:data][:id]
+          id: AdminSerializer.new(resource).serializable_hash[:data][:id]
         )
       }
     else
@@ -34,7 +34,7 @@ class Admins::SessionsController < Devise::SessionsController
       # Track successful logout if needed
       logger.info "Admin #{current_admin.id} signed out successfully"
     end
-    
+
     render json: {
       status: 200,
       message: 'Logged out successfully.'
