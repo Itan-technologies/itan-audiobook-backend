@@ -1,7 +1,6 @@
 module Api
   module V1
     class StatusController < ApplicationController
-      skip_before_action :authenticate_user!, if: -> { defined?(authenticate_user!) }
 
       def index
         render json: {
