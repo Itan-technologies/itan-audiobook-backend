@@ -1,13 +1,11 @@
 #!/usr/bin/env bash
-# exit on error
 set -o errexit
 
+# Install Ruby gems
 bundle install
-# bundle exec rails assets:precompile
-# bundle exec rails assets:clean
 
-# If you're using a Free instance type, you need to
-# perform database migrations in the build command.
-# Uncomment the following line:
+# Fix bin/rails permission (important!)
+chmod +x bin/rails
 
+# Run database migrations
 bundle exec rails db:migrate

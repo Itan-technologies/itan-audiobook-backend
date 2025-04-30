@@ -83,6 +83,4 @@ test:
 #
 production:
   <<: *default
-  database: itan_audiobook_backend_production
-  username: itan_audiobook_backend
-  password: <%= ENV["ITAN_AUDIOBOOK_BACKEND_DATABASE_PASSWORD"] %>
+  ur: <%= ENV["DATABASE_URL"] %>
