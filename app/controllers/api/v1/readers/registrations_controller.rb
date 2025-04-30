@@ -6,12 +6,11 @@ class Api::V1::Readers::RegistrationsController < Devise::RegistrationsControlle
 
   def respond_with(resource, _opts = {})
     if resource.persisted?
+      serialized = ReaderSerializer.new(resource).serializable_hash[:data]
       render json: {
         status: { code: 200, message: 'Signed up successfully.' },
-        data: ReaderSerializer.new(resource).serializable_hash[:data][:attributes].merge(
-          id: ReaderSerializer.new(resource).serializable_hash[:data][:id]
-        )
-      }
+        data: serialized[:attributes].merge(id: serialized[:id])
+      }, status: :ok
     else
       render json: {
         status: { code: 422, message: 'Reader could not be created.' },
@@ -22,5 +21,10 @@ class Api::V1::Readers::RegistrationsController < Devise::RegistrationsControlle
 
   def sign_up_params
     params.require(:reader).permit(:email, :password, :password_confirmation)
+  end
+
+  # Make sure this method is called by Devise when sign-up happens
+  def build_resource(sign_up_params)
+    self.resource = Reader.new(sign_up_params)
   end
 end
