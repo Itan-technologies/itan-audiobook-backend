@@ -83,22 +83,20 @@ class Author < ApplicationRecord
   end
 
   def self.attach_profile_image(author, image_url)
-    begin
-      temp_file = Down.download(
-        image_url,
-        max_size: 5 * 1024 * 1024, # 5MB limit
-        max_redirects: 2
-      )
-      author.author_profile_image.attach(
-        io: temp_file,
-        filename: "profile_#{SecureRandom.hex(8)}.jpg",
-        content_type: temp_file.content_type
-      )
-    rescue Down::Error => e
-      Rails.logger.error "Profile image download failed: #{e.message}"
-    ensure
-      temp_file&.close if temp_file&.respond_to?(:close)
-    end
+    temp_file = Down.download(
+      image_url,
+      max_size: 5 * 1024 * 1024, # 5MB limit
+      max_redirects: 2
+    )
+    author.author_profile_image.attach(
+      io: temp_file,
+      filename: "profile_#{SecureRandom.hex(8)}.jpg",
+      content_type: temp_file.content_type
+    )
+  rescue Down::Error => e
+    Rails.logger.error "Profile image download failed: #{e.message}"
+  ensure
+    temp_file&.close if temp_file.respond_to?(:close)
   end
 
   private
