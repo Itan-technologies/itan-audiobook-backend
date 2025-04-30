@@ -79,11 +79,23 @@ class Author < ApplicationRecord
 
       # If you want to store profile image from Google
       if auth.info.image
-        downloaded_image = URI.open(auth.info.image)
-        author.author_profile_image.attach(
-          io: downloaded_image,
-          filename: 'google_profile_image.jpg'
-        )
+        # Safely download with validation
+        begin
+          temp_file = Down.download(
+            auth.info.image,
+            max_size: 5 * 1024 * 1024, # 5MB limit
+            max_redirects: 2
+          )
+          author.author_profile_image.attach(
+            io: temp_file,
+            filename: "profile_#{SecureRandom.hex(8)}.jpg",
+            content_type: temp_file.content_type
+          )
+        rescue Down::Error => e
+          Rails.logger.error "Profile image download failed: #{e.message}"
+        ensure
+          temp_file.close if temp_file.respond_to?(:close)
+        end
       end
     end
   end

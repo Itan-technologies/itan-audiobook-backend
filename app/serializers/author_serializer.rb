@@ -13,8 +13,6 @@ class AuthorSerializer
         Rails.logger.error("Failed to generate profile image URL: #{e.message}")
         nil
       end
-    else
-      nil # or a default image URL
     end
   end
 end

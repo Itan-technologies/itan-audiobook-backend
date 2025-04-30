@@ -26,46 +26,19 @@ class Api::V1::BooksController < ApplicationController
   # POST /api/v1/books
 
   def create
-    # Fix: Use current_author's association
     @book = current_author.books.new(book_params)
 
-    # Handle both direct uploads and regular uploads
-    if @book.save
-      # Check if files were actually saved to S3
-      if @book.cover_image.attached? && @book.ebook_file.attached?
-        render json: {
-          status: { code: 200, message: 'Book created successfully.' },
-          data: BookSerializer.new(@book).serializable_hash[:data][:attributes]
-        }
+    begin
+      if create_book_with_attachments
+        render_success_response(@book, 'Book created successfully.')
       else
-        # Something went wrong with the uploads
-        missing = []
-        missing << 'cover image' unless @book.cover_image.attached?
-        missing << 'ebook file' unless @book.ebook_file.attached?
-
-        @book.destroy # Clean up the partial record
-
-        render json: {
-          status: { code: 422, message: "Book record created but failed to attach #{missing.join(' and ')}." }
-        }, status: :unprocessable_entity
+        render_error_response(@book.errors.present? ? @book.errors.full_messages.join(', ') : 'Failed to create book')
       end
-    else
-      render json: {
-        status: { code: 422, message: @book.errors.full_messages.join(', ') }
-      }, status: :unprocessable_entity
+    rescue ActiveStorage::IntegrityError => e
+      handle_integrity_error(e)
+    rescue StandardError => e
+      handle_standard_error(e)
     end
-  rescue ActiveStorage::IntegrityError => e
-    @book.destroy if @book.persisted?
-    Rails.logger.error "S3 Integrity Error: #{e.message}"
-    Rails.logger.error "S3 Integrity Error details: #{e.backtrace.join("\n")}"
-    render json: {
-      status: { code: 422, message: 'Upload integrity error. Please try again.' }
-    }, status: :unprocessable_entity
-  rescue StandardError => e
-    Rails.logger.error "Error creating book: #{e.message}\n#{e.backtrace.join("\n")}"
-    render json: {
-      status: { code: 500, message: "Server error: #{e.message}" }
-    }, status: :internal_server_error
   end
 
   # PUT/PATCH /api/v1/books/:id
@@ -93,6 +66,48 @@ class Api::V1::BooksController < ApplicationController
 
 
   private
+
+  def create_book_with_attachments
+    return false unless @book.save
+
+    # Verify attachments
+    return true if @book.cover_image.attached? && @book.ebook_file.attached?
+
+
+    # Clean up if attachments failed
+    missing = []
+    missing << 'cover image' unless @book.cover_image.attached?
+    missing << 'ebook file' unless @book.ebook_file.attached?
+
+    @book.destroy
+    @book.errors.add(:base, "Failed to attach #{missing.join(' and ')}.")
+    false
+  end
+
+  def render_success_response(book, message)
+    render json: {
+      status: { code: 200, message: message },
+      data: BookSerializer.new(book).serializable_hash[:data][:attributes]
+    }
+  end
+
+  def render_error_response(message, status = :unprocessable_entity)
+    render json: {
+      status: { code: status == :unprocessable_entity ? 422 : 500, message: message }
+    }, status: status
+  end
+
+  def handle_integrity_error(error)
+    @book.destroy if @book.persisted?
+    Rails.logger.error "S3 Integrity Error: #{error.message}"
+    Rails.logger.error "S3 Integrity Error details: #{error.backtrace.join("\n")}"
+    render_error_response('Upload integrity error. Please try again.')
+  end
+
+  def handle_standard_error(error)
+    Rails.logger.error "Error creating book: #{error.message}\n#{error.backtrace.join("\n")}"
+    render_error_response("Server error: #{error.message}", :internal_server_error)
+  end
 
   def render_books_json(books)
     render json: {

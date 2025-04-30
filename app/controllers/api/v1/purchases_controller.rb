@@ -1,6 +1,5 @@
 class Api::V1::PurchasesController < ApplicationController
   def create
-    debugger
     # Validate required parameters
     unless params[:email].present? && params[:book_id].present?
       return render json: {
