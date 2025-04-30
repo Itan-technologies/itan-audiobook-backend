@@ -64,7 +64,6 @@ class Api::V1::BooksController < ApplicationController
     }
   end
 
-
   private
 
   def create_book_with_attachments
@@ -72,7 +71,6 @@ class Api::V1::BooksController < ApplicationController
 
     # Verify attachments
     return true if @book.cover_image.attached? && @book.ebook_file.attached?
-
 
     # Clean up if attachments failed
     missing = []
