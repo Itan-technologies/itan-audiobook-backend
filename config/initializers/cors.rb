@@ -7,7 +7,7 @@
 
 Rails.application.config.middleware.insert_before 0, Rack::Cors do
   allow do
-    origins "http://localhost:9000"
+    origins ["https://itan.app", "https://publish.itan.app"]
 
     # Explicitly specify the ActiveStorage paths
     resource "/rails/active_storage/direct_uploads",
