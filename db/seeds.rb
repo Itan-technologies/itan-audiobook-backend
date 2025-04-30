@@ -15,9 +15,9 @@
 
 # puts 'Admin seeded'
 
-book = Book.order(created_at: :desc).first
-puts "Book: #{book.title}"
-puts "Original dimensions: #{book.cover_image.metadata['width']}x#{book.cover_image.metadata['height']}"
-puts "Original URL: #{book.cover_image.url}"
-puts "Standard URL: #{book.standardized_cover_url}"
-puts "Thumbnail URL: #{book.cover_thumbnail_url}"
+# book = Book.order(created_at: :desc).first
+# puts "Book: #{book.title}"
+# puts "Original dimensions: #{book.cover_image.metadata['width']}x#{book.cover_image.metadata['height']}"
+# puts "Original URL: #{book.cover_image.url}"
+# puts "Standard URL: #{book.standardized_cover_url}"
+# puts "Thumbnail URL: #{book.cover_thumbnail_url}"
