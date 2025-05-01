@@ -44,7 +44,7 @@ Rails.application.configure do
   config.action_mailer.smtp_settings = {
     address:       'smtp.gmail.com',
     port:          587,
-    domain:         ENV['MAIL_HOST'], 
+    domain:         'gmail.com', 
     user_name:      ENV['SENDMAIL_USERNAME'],
     password:       ENV['APP_SPEC_PASSWORD'],
     authentication: :plain,
@@ -56,7 +56,7 @@ Rails.application.configure do
 
   config.active_storage.direct_upload = true
 
-  Rails.application.routes.default_url_options[:host] = 'your-production-domain.com'
+  Rails.application.routes.default_url_options[:host] = 'itan-ebook-backend.onrender.com'
 
   # Mount Action Cable outside main process or domain.
   # config.action_cable.mount_path = nil
