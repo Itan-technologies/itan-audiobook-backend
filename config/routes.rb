@@ -74,4 +74,7 @@ Rails.application.routes.draw do
   # Defines the root path route ("/")
   # root "posts#index"
   root "api/v1/status#index"
+
+  # Direct route for confirmation links in emails
+  get '/confirmation', to: 'api/v1/authors/confirmations#show'
 end
