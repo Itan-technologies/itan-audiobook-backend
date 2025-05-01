@@ -4,12 +4,12 @@ class AuthorMailer < Devise::Mailer
   default from: 'omololuayk@gmail.com'
 
   def confirmation_instructions(record, token, opts = {})
-    @confirmation_url = "http://localhost:3000/authors/confirmation?confirmation_token=#{token}"
+    @confirmation_url = "https://itan-ebook-backend.onrender.com/confirmation?confirmation_token=#{token}"
     super
   end
 
   def reset_password_instructions(record, token, opts = {})
-    @reset_password_url = "http://localhost:9000/reset-password?reset_password_token=#{token}"
+    @reset_password_url = "https://itan-ebook-backend.onrender.com/reset-password?reset_password_token=#{token}"
     super
   end
 
