@@ -7,7 +7,8 @@ class Api::V1::Authors::ConfirmationsController < Devise::ConfirmationsControlle
     
     # If accessed directly from email, redirect to frontend
     if request.format.html?
-      redirect_to "https://publish.itan.app/confirm?status=#{resource.errors.empty? ? 'success' : 'error'}"
+      redirect_to "https://publish.itan.app/confirm?status=#{resource.errors.empty? ? 'success' : 'error'}", 
+                allow_other_host: true
     else
       # Standard JSON response for API clients
       if resource.errors.empty?
