@@ -6,12 +6,12 @@ class Api::V1::Authors::ConfirmationsController < Devise::ConfirmationsControlle
     self.resource = resource_class.confirm_by_token(params[:confirmation_token])
     
     # If accessed directly from email, redirect to frontend
-    if request.formal.html?
+    if request.format.html?
       if resource.errors.empty?
-        redirect_to "https://publish.itan.app/author/confirmation-success"
+        redirect_to "https://publish.itan.app/author/confirmation-success",
         allow_other_host: true
       else
-        redirect_to "https://publish.itan.app/author/confirmation-error"
+        redirect_to "https://publish.itan.app/author/confirmation-error",
         allow_other_host: true
       end
     else
