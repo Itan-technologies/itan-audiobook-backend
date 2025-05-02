@@ -6,23 +6,21 @@ class Api::V1::Authors::ConfirmationsController < Devise::ConfirmationsControlle
     self.resource = resource_class.confirm_by_token(params[:confirmation_token])
     
     # If accessed directly from email, redirect to frontend
-    if request.format.html?
-      redirect_to "https://publish.itan.app/confirm?status=#{resource.errors.empty? ? 'success' : 'error'}", 
-                allow_other_host: true
-    else
-      # Standard JSON response for API clients
+    if request.formal.html?
       if resource.errors.empty?
-        render json: {
-          status: { code: 200, message: 'Your account has been successfully confirmed.' }
-        }
+        redirect_to "https://publish.itan.app/author/confirmation-success"
+        allow_other_host: true
       else
-        render json: {
-          status: { code: 422, message: resource.errors.full_messages.join(', ') }
-        }, status: :unprocessable_entity
+        redirect_to "https://publish.itan.app/author/confirmation-error"
+        allow_other_host: true
       end
+    else
+      render json: {
+        status: { code: 422, message: resource.errors.full_messages.join(', ') }
+      }, status: :unprocessable_entity
+      
     end
-  end
-
+  end  
   # POST /resource/confirmation
   def create
     self.resource = resource_class.send_confirmation_instructions(resource_params)
