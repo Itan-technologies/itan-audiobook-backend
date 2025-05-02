@@ -190,6 +190,10 @@ Devise.setup do |config|
     same_site: :none  # For cross-domain requests
   }
 
+  Rails.application.config.session_store :cookie_store, 
+  key: '_itan_session',
+  secure: Rails.env.production?,
+  same_site: :none
   # ==> Configuration for :validatable
   # Range for password length.
   config.password_length = 6..128
