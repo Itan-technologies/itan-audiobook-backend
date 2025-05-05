@@ -64,7 +64,8 @@ class Api::V1::Authors::TwoFactorsController < ApplicationController
       current_author.clear_two_factor_code!
       
       render json: {
-        status: { code: 200, message: 'Phone verified and 2FA enabled' }
+        status: { code: 200, message: 'Phone verified and 2FA enabled' },
+        data: AuthorSerializer.new(current_author).serializable_hash[:data][:attributes]
       }
     else
       render json: {
