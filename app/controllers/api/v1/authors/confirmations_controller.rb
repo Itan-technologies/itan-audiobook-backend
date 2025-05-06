@@ -3,24 +3,33 @@ class Api::V1::Authors::ConfirmationsController < Devise::ConfirmationsControlle
 
   # GET /resource/confirmation?confirmation_token=abcdef
   def show
-    self.resource = resource_class.confirm_by_token(params[:confirmation_token])
-    
-    # If accessed directly from email, redirect to frontend
-    if request.format.html?
-      if resource.errors.empty?
-        redirect_to "https://publish.itan.app/author/confirmation-success",
-        allow_other_host: true
-      else
-        redirect_to "https://publish.itan.app/author/confirmation-error",
-        allow_other_host: true
-      end
-    else
-      render json: {
-        status: { code: 422, message: resource.errors.full_messages.join(', ') }
-      }, status: :unprocessable_entity
+      self.resource = resource_class.confirm_by_token(params[:confirmation_token])
       
-    end
-  end  
+      # If accessed directly from email, redirect to frontend
+      if request.format.html?
+        # Use environment variables for URLs
+        frontend_base = Rails.env.production? ? ENV['FRONTEND_URL'] : "http://localhost:9000"
+        
+        if resource.errors.empty?
+          redirect_to "#{frontend_base}/auth/confirmation-success", allow_other_host: true
+        else
+          redirect_to "#{frontend_base}/auth/confirmation-error", allow_other_host: true
+        end
+      else
+        # For API requests
+        if resource.errors.empty?
+          render json: {
+            status: { code: 200, message: 'Email confirmed successfully.' },
+            data: { confirmed: true, email: resource.email }
+          }
+        else
+          render json: {
+            status: { code: 422, message: resource.errors.full_messages.join(', ') }
+          }, status: :unprocessable_entity
+        end
+      end
+  end
+  
   # POST /resource/confirmation
   def create
     self.resource = resource_class.send_confirmation_instructions(resource_params)
