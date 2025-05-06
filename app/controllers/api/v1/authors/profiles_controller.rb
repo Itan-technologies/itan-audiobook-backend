@@ -9,7 +9,8 @@ class Api::V1::Authors::ProfilesController < ApplicationController
   def show
     render json: {
       status: { code: 200, message: 'Profile successfully displayed' },
-      data: AuthorSerializer.new(current_author).serializable_hash[:data][:attributes]
+      data: AuthorSerializer.new(current_author).serializable_hash[:data][:attributes].merge(
+      id: AuthorSerializer.new(current_author).serializable_hash[:data][:id])
     }
   rescue StandardError => e
     Rails.logger.error("profile not displayed: #{e.message}")
