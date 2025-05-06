@@ -1,4 +1,10 @@
 class Api::V1::Authors::SessionsController < Devise::SessionsController
+  require 'httparty'
+  require 'net/http'
+  require 'uri'
+
+  include Recaptcha::Adapters::ControllerMethods
+
   respond_to :json
 
   # Skip authentication check for the sign-out action
@@ -14,6 +20,38 @@ class Api::V1::Authors::SessionsController < Devise::SessionsController
 
   # Create a session (login attempt)
   def create
+    # Verify reCAPTCHA first
+  params_token = params[:author][:captchaToken]
+  Rails.logger.info "Token length: #{params_token&.length || 'nil'}"
+
+  # Use the same HTTP approach that worked in your test
+  uri = URI('https://www.google.com/recaptcha/api/siteverify')
+  http = Net::HTTP.new(uri.host, uri.port)
+  http.use_ssl = true
+  http.open_timeout = 5
+  http.read_timeout = 5
+  
+  response = http.post(uri.path, URI.encode_www_form({
+    secret: ENV['RECAPTCHA_SECRET_KEY'],
+    response: params_token
+  }))
+  
+  result = JSON.parse(response.body)
+  recaptcha_valid = result['success'] == true
+  
+  Rails.logger.info "reCAPTCHA direct verification: #{result.inspect}"
+  
+  unless recaptcha_valid
+    render json: {
+      status: { code: 422, message: "reCAPTCHA verification failed: #{result['error-codes']}" }
+    }, status: :unprocessable_entity
+    return
+  end
+    
+    # Remove captchaToken to prevent Devise errors
+    params[:author].delete(:captchaToken) if params[:author]&.key?(:captchaToken)
+
+    begin
     # First stage authentication with email/password
     self.resource = warden.authenticate!(auth_options)
 
@@ -38,6 +76,12 @@ class Api::V1::Authors::SessionsController < Devise::SessionsController
       # No 2FA required, complete login
       sign_in(resource_name, resource)
       respond_with(resource)
+    end
+    rescue => e
+    Rails.logger.error "Authentication error: #{e.message}"
+    render json: {
+      status: { code: 401, message: "Invalid email or password" }
+    }, status: :unauthorized
     end
   end
 
