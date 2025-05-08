@@ -1,12 +1,81 @@
 class Api::V1::BooksController < ApplicationController
-  before_action :authenticate_author!, except: %i[index show]
-  before_action :set_book, only: %i[show update destroy]
+  # Load the book resource
+  before_action :set_book, only: %i[show update destroy approve reject]
+  
+  # Author-specific actions
+  before_action :authenticate_author!, only: %i[create update destroy my_books]
   before_action :authorize_author!, only: %i[update destroy]
+
+  # Admin-only actions
+  before_action :authenticate_admin!, only: %i[approve reject admin_index]
 
   # GET /api/v1/books
   def index
-    @books = Book.includes(cover_image_attachment: :blob).order(created_at: :desc)
+    if current_admin
+      # Admins see all books
+      @books = Book.includes(:author, cover_image_attachment: :blob)
+                .order(created_at: :desc)
+    else
+      # Everyone else (including authors) sees only approved books
+      @books = Book.includes(cover_image_attachment: :blob)
+                .where(approval_status: 'approved')
+                .order(created_at: :desc)
+    end
+
     render_books_json(@books)
+  end
+
+  # GET /api/v1/books/admin
+  def admin_index
+    @books = Book.includes(:author, cover_image_attachment: :blob)
+              .order(created_at: :desc)
+
+    @books = case params[:status]
+            when 'pending' then @books.pending
+            when 'approved' then @books.approved
+            when 'rejected' then @books.rejected
+            else @books
+            end
+
+    render_books_json(@books)
+  end
+
+  # PATCH /api/v1/books/:id/approve
+  def approve
+    @book.update(approval_status: 'approved')    
+    render_books_json(@book, 'Book approved successfully.')
+  end
+
+  # PATCH /api/v1/books/:id/reject
+  def reject
+    # Validate presence of admin_feedback
+    if params[:admin_feedback].blank?
+      return render json: {
+        status: { code: 422, message: 'Admin feedback is required when rejecting a book' }
+      }, status: :unprocessable_entity
+    end
+
+    # Optional: Validate feedback length
+    if params[:admin_feedback].length < 10
+      return render json: {
+        status: { code: 422, message: 'Feedback must be at least 10 characters' }
+      }, status: :unprocessable_entity
+    end
+
+    # Now perform the update
+    if @book.update(
+        approval_status: 'rejected',
+        admin_feedback: params[:admin_feedback]
+      )
+      render json: {
+        status: { code: 200, message: 'Book rejected.' },
+        data: BookSerializer.new(@book).serializable_hash[:data][:attributes]
+      }
+    else
+      render json: {
+        status: { code: 422, message: @book.errors.full_messages.join(', ') }
+      }, status: :unprocessable_entity
+    end
   end
 
   # GET /api/v1/books/my_books
@@ -17,10 +86,7 @@ class Api::V1::BooksController < ApplicationController
 
   # GET /api/v1/books/:id
   def show
-    render json: {
-      status: { code: 200 },
-      data: BookSerializer.new(@book).serializable_hash[:data][:attributes]
-    }
+    render_books_json(@book)
   end
 
   # POST /api/v1/books
@@ -107,11 +173,24 @@ class Api::V1::BooksController < ApplicationController
     render_error_response("Server error: #{error.message}", :internal_server_error)
   end
 
-  def render_books_json(books)
-    render json: {
-      status: { code: 200 },
-      data: BookSerializer.new(books).serializable_hash[:data].map { |book| book[:attributes] }
-    }
+  def render_books_json(books, message = nil, status_code = 200)
+      response = {
+        status: { code: status_code }
+      }
+      
+      # Add message if provided
+      response[:status][:message] = message if message
+      
+      # Handle both collections and single records
+      if books.is_a?(Book)
+        # Single book
+        response[:data] = BookSerializer.new(books).serializable_hash[:data][:attributes]
+      else
+        # Collection of books
+        response[:data] = BookSerializer.new(books).serializable_hash[:data].map { |book| book[:attributes] }
+      end
+      
+      render json: response
   end
 
   # Used to manage error, record not found
