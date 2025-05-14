@@ -27,7 +27,14 @@ Rails.application.routes.draw do
       resources :books do
         collection do
           get :my_books
+          get :admin, to: 'books#admin_index'
         end
+
+        member do
+          patch :approve
+          patch :reject
+        end
+
       end
 
       resources :admins
