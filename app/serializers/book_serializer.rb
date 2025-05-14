@@ -5,7 +5,8 @@ class BookSerializer
              :primary_audience, :publishing_rights, :ebook_price, :audiobook_price,
              :unique_book_id, :unique_audio_id, :created_at, :updated_at,
              :ai_generated_image, :explicit_images, :subtitle, :bio,
-             :categories, :keywords, :book_isbn, :terms_and_conditions
+             :categories, :keywords, :book_isbn, :terms_and_conditions, 
+             :approval_status, :admin_feedback 
 
   attribute :cover_image_url do |book|
     if book.cover_image.attached?
