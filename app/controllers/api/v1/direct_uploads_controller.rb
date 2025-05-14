@@ -2,6 +2,8 @@ class Api::V1::DirectUploadsController < ActiveStorage::DirectUploadsController
   protect_from_forgery with: :null_session
   skip_before_action :verify_authenticity_token
 
+  before_action :authenticate_author!
+
   def create
     blob = ActiveStorage::Blob.create_before_direct_upload!(
       filename: blob_args[:filename],
