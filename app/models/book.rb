@@ -17,6 +17,19 @@ class Book < ApplicationRecord
   validates :unique_book_id, uniqueness: true, allow_nil: true
   validates :unique_audio_id, uniqueness: true, allow_nil: true
 
+  enum approval_status: {
+    pending: 'pending',
+    approved: 'approved',
+    rejected: 'rejected'
+  }, _default: 'pending'
+
+  # Scopes to filter books by status
+  scope :pending, -> { where(approval_status: 'pending') }
+  scope :approved, -> { where(approval_status: 'approved') }
+  scope :rejected, -> { where(approval_status: 'rejected') }
+  # Only show approved books to the public
+  scope :publicly_visible, -> { approved }
+
   # Add a method to get standardized cover
   # def standardized_cover_url
   #   return nil unless cover_image.attached?
