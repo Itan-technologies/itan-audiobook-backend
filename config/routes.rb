@@ -71,12 +71,12 @@ Rails.application.routes.draw do
     end
   end
 
+  # In routes.rb
+  devise_scope :author do
+    post '/api/v1/authors/confirmation/confirm', to: 'api/v1/authors/confirmations#confirm'
+  end
 
   # Define your application routes per the DSL in https://guides.rubyonrails.org/routing.html
-  
-  devise_scope :author do
-    get '/confirmation', to: 'api/v1/authors/confirmations#show'
-  end
   
   # Reveal health status on /up that returns 200 if the app boots with no exceptions, otherwise 500.
   # Can be used by load balancers and uptime monitors to verify that the app is live.
