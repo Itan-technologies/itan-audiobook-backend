@@ -16,6 +16,8 @@ class Book < ApplicationRecord
   validates :title, presence: true
   validates :unique_book_id, uniqueness: true, allow_nil: true
   validates :unique_audio_id, uniqueness: true, allow_nil: true
+  validate  :tags_must_be_valid
+  validate  :keywords_must_be_valid
 
   enum approval_status: {
     pending: 'pending',
@@ -78,6 +80,26 @@ class Book < ApplicationRecord
       next_number = last_number + 1
       self.unique_book_id = "BOO#{next_number}"
       self.unique_audio_id = "AOO#{next_number}"
+    end
+  end
+
+  def tags_must_be_valid
+    if tags.present?
+      if !tags.is_a?(Array)
+        errors.add(:tags, "must be an array")
+      elsif tags.any? { |tag| !tag.is_a?(String) || tag.blank? }
+        errors.add(:tags, "can only contain non-empty strings")
+      end
+    end
+  end
+
+  def keywords_must_be_valid
+    if keywords.present?
+      if !keywords.is_a?(Array)
+        errors.add(:keywords, "must be an array")
+      elsif keywords.any? { |keyword| !keyword.is_a?(String) || keyword.blank? }
+        errors.add(:keywords, "can only contain non-empty strings")
+      end
     end
   end
 end

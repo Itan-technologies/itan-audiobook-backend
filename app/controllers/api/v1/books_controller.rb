@@ -216,6 +216,7 @@ class Api::V1::BooksController < ApplicationController
                                  :ebook_price, :audiobook_price, :cover_image,
                                  :audiobook_file, :ebook_file, :ai_generated_image, :explicit_images,
                                  :subtitle, :bio, :categories, :keywords,
-                                 :book_isbn, :terms_and_conditions)
+                                 :book_isbn, :terms_and_conditions, :tags, :publisher, 
+                                 :first_name, :last_name)
   end
 end

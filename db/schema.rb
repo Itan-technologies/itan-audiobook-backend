@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2025_05_06_204650) do
+ActiveRecord::Schema[7.1].define(version: 2025_05_21_114822) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pgcrypto"
   enable_extension "plpgsql"
@@ -105,12 +105,18 @@ ActiveRecord::Schema[7.1].define(version: 2025_05_06_204650) do
     t.string "subtitle"
     t.text "bio"
     t.string "categories"
-    t.string "keywords"
+    t.string "keywords", array: true
     t.integer "book_isbn"
     t.boolean "terms_and_conditions"
     t.string "approval_status", default: "pending"
     t.text "admin_feedback"
+    t.string "publisher"
+    t.string "first_name"
+    t.string "last_name"
+    t.string "tags", default: [], array: true
     t.index ["author_id"], name: "index_books_on_author_id"
+    t.index ["keywords"], name: "index_books_on_keywords", using: :gin
+    t.index ["tags"], name: "index_books_on_tags", using: :gin
     t.index ["unique_audio_id"], name: "index_books_on_unique_audio_id", unique: true
     t.index ["unique_book_id"], name: "index_books_on_unique_book_id", unique: true
   end
