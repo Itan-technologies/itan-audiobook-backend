@@ -1,5 +1,6 @@
 class Book < ApplicationRecord
   before_create :generate_unique_ids
+  before_validation :ensure_arrays_format
 
   belongs_to :author
   has_many :purchases
@@ -64,6 +65,17 @@ class Book < ApplicationRecord
   # end
 
   private
+
+  def ensure_arrays_format
+    if keywords.present? && !keywords.is_a?(Array)
+      self.keywords = keywords.split(',').map(&:strip)
+    end
+    
+    if tags.present? && !tags.is_a?(Array)
+      self.tags = tags.split(',').map(&:strip)
+    end
+  end
+  
 
   def generate_unique_ids
     # Use a transaction to prevent race conditions
