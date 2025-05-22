@@ -39,11 +39,10 @@ Rails.application.routes.draw do
             patch :reject
           end
         end
-        resources :authors, only: [:index, :show]
+        resources :authors, only: [:index, :show]       
       end
 
-      resources :authors, only: [:index, :show]
-      
+      # Author account management    
       namespace :authors do
         resource :profile, only: [:show, :update, :create]
         post 'verify', to: 'verifications#verify'
