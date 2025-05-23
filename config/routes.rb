@@ -46,7 +46,7 @@ Rails.application.routes.draw do
       namespace :authors do
         resource :profile, only: [:show, :update, :create]
         post 'verify', to: 'verifications#verify'
-        post 'resend_code', to: 'verifications#resend'
+        post 'resend_verification', to: 'verifications#resend_verification'
         
         resource :two_factor, only: [] do
           get :status
