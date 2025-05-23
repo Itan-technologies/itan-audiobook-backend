@@ -25,8 +25,27 @@ class Api::V1::Admin::BooksController < ApplicationController
   
     # PATCH /api/v1/admin/books/:id/approve
     def approve
-      @book.update(approval_status: 'approved')    
-      render_books_json(@book, 'Book approved successfully.')
+      # If you actually need feedback for approvals:
+      if params[:admin_feedback].blank?
+        return render json: {
+          status: { code: 422, message: 'Admin feedback is required when approving a book' }
+        }, status: :unprocessable_entity
+      end
+    
+      # Process data consistently
+      process_book_attributes
+      
+      # Include feedback in the update if needed
+      if @book.update(
+          approval_status: 'approved',
+          admin_feedback: params[:admin_feedback]
+        )
+        render_books_json(@book, 'Book approved successfully.')
+      else
+        render json: {
+          status: { code: 422, message: @book.errors.full_messages.join(', ') }
+        }, status: :unprocessable_entity
+      end
     end
   
     # PATCH /api/v1/admin/books/:id/reject
@@ -38,14 +57,8 @@ class Api::V1::Admin::BooksController < ApplicationController
         }, status: :unprocessable_entity
       end
   
-      # Explicit conversion
-      if @book.keywords.present? && !@book.keywords.is_a?(Array)
-        @book.keywords = @book.keywords.split(',').map(&:strip)
-      end
-    
-      if @book.tags.present? && !@book.tags.is_a?(Array)
-        @book.tags = @book.tags.split(',').map(&:strip)
-      end
+      # Process data consistently
+      process_book_attributes
   
       # Now perform the update
       if @book.update(
@@ -87,5 +100,18 @@ class Api::V1::Admin::BooksController < ApplicationController
       end
       
       render json: response
+    end
+
+    private
+
+    def process_book_attributes
+      # Handle keywords and tags conversion
+      if @book.keywords.present? && !@book.keywords.is_a?(Array)
+        @book.keywords = @book.keywords.split(',').map(&:strip)
+      end
+
+      if @book.tags.present? && !@book.tags.is_a?(Array)
+        @book.tags = @book.tags.split(',').map(&:strip)
+      end
     end
   end
