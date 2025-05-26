@@ -19,6 +19,7 @@ class Book < ApplicationRecord
   validates :unique_audio_id, uniqueness: true, allow_nil: true
   validate  :tags_must_be_valid
   validate  :keywords_must_be_valid
+  validates :categories, presence: true
 
   enum approval_status: {
     pending: 'pending',
