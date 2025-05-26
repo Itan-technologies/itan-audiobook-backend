@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2025_05_21_114822) do
+ActiveRecord::Schema[7.1].define(version: 2025_05_26_203635) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pgcrypto"
   enable_extension "plpgsql"
@@ -91,7 +91,7 @@ ActiveRecord::Schema[7.1].define(version: 2025_05_21_114822) do
     t.string "title"
     t.text "description"
     t.string "edition_number"
-    t.string "contributors"
+    t.string "contributors", array: true
     t.integer "primary_audience"
     t.boolean "publishing_rights"
     t.integer "ebook_price"
@@ -104,7 +104,7 @@ ActiveRecord::Schema[7.1].define(version: 2025_05_21_114822) do
     t.boolean "explicit_images"
     t.string "subtitle"
     t.text "bio"
-    t.string "categories"
+    t.string "categories", array: true
     t.string "keywords", array: true
     t.integer "book_isbn"
     t.boolean "terms_and_conditions"
@@ -115,6 +115,8 @@ ActiveRecord::Schema[7.1].define(version: 2025_05_21_114822) do
     t.string "last_name"
     t.string "tags", default: [], array: true
     t.index ["author_id"], name: "index_books_on_author_id"
+    t.index ["categories"], name: "index_books_on_categories", using: :gin
+    t.index ["contributors"], name: "index_books_on_contributors", using: :gin
     t.index ["keywords"], name: "index_books_on_keywords", using: :gin
     t.index ["tags"], name: "index_books_on_tags", using: :gin
     t.index ["unique_audio_id"], name: "index_books_on_unique_audio_id", unique: true
