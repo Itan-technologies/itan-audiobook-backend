@@ -9,10 +9,14 @@ class Api::V1::Readers::SessionsController < Devise::SessionsController
 
   def respond_with(resource, _opts = {})
     if resource.persisted?
+      # Extract JWT token from response headers (set by devise-jwt)
+      token = response.headers['Authorization']
+      
       render json: {
         status: { code: 200, message: 'Logged in successfully.' },
         data: ReaderSerializer.new(resource).serializable_hash[:data][:attributes].merge(
-          id: ReaderSerializer.new(resource).serializable_hash[:data][:id]
+          id: ReaderSerializer.new(resource).serializable_hash[:data][:id],
+          token: token&.split(' ')&.last  # Extract token from "Bearer TOKEN"
         )
       }
     else
