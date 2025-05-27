@@ -61,11 +61,11 @@ Rails.application.routes.draw do
         resource :profile, only: [:show, :update, :create]
       end
 
-      resources :purchases do
+      resources :purchases, only: [:create, :index] do
         collection do
           post :verify 
-        end 
-      end 
+        end
+      end
     
       resource :direct_uploads, only: [:create]
     end
