@@ -153,17 +153,19 @@ class Api::V1::PurchasesController < ApplicationController
         status: { code: 401, message: 'Authentication token required' }
       }, status: :unauthorized
     end
-
+  
     begin
       decoded_token = JWT.decode(
         token, 
-        Rails.application.credentials.secret_key_base, 
+        ENV['DEVISE_JWT_SECRET_KEY'],    # ← Use the correct JWT secret
         true, 
         { algorithm: 'HS256' }
       )
-      reader_id = decoded_token[0]['reader_id']
+      
+      reader_id = decoded_token[0]['sub']  # ← Use 'sub' not 'reader_id'
       @current_reader = Reader.find(reader_id)
-    rescue JWT::DecodeError, ActiveRecord::RecordNotFound
+    rescue JWT::DecodeError, ActiveRecord::RecordNotFound => e
+      Rails.logger.error "JWT Authentication failed: #{e.message}"
       render json: {
         status: { code: 401, message: 'Invalid authentication token' }
       }, status: :unauthorized
