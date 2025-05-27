@@ -118,13 +118,21 @@ class Api::V1::BooksController < ApplicationController
         end
     end
 
-    def book_params
-        params.require(:book).permit(   :title, :description, :edition_number, :contributors,
-                                        :primary_audience, :publishing_rights,
-                                        :ebook_price, :audiobook_price, :cover_image,
-                                        :audiobook_file, :ebook_file, :ai_generated_image, :explicit_images,
-                                        :subtitle, :bio, :categories, :keywords,
-                                        :book_isbn, :terms_and_conditions
-                                    )
-    end
+    render json: {
+      status: { code: 403, message: 'You are not authorized to perform this action' }
+    }, status: :forbidden
+  end
+
+  def book_params
+    params.require(:book).permit(
+    :title, :description, :edition_number, :contributors,
+    :primary_audience, :publishing_rights,
+    :ebook_price, :audiobook_price, :cover_image,
+    :audiobook_file, :ebook_file, :ai_generated_image, :explicit_images,
+    :subtitle, :bio, :categories,
+    :book_isbn, :terms_and_conditions,
+    :publisher, :first_name, :last_name,
+    tags: [], keywords: []
+  )
+  end
 end
