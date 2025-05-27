@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2025_05_26_203635) do
+ActiveRecord::Schema[7.1].define(version: 2025_05_26_224912) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pgcrypto"
   enable_extension "plpgsql"
@@ -150,7 +150,13 @@ ActiveRecord::Schema[7.1].define(version: 2025_05_26_203635) do
     t.datetime "purchase_date", precision: nil
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.string "transaction_reference"
+    t.datetime "payment_verified_at"
+    t.uuid "reader_id"
     t.index ["book_id"], name: "index_purchases_on_book_id"
+    t.index ["reader_id", "book_id"], name: "index_purchases_on_reader_id_and_book_id"
+    t.index ["reader_id"], name: "index_purchases_on_reader_id"
+    t.index ["transaction_reference"], name: "index_purchases_on_transaction_reference", unique: true
   end
 
   create_table "readers", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
@@ -183,5 +189,6 @@ ActiveRecord::Schema[7.1].define(version: 2025_05_26_203635) do
   add_foreign_key "books", "authors"
   add_foreign_key "chapters", "books"
   add_foreign_key "purchases", "books"
+  add_foreign_key "purchases", "readers"
   add_foreign_key "reviews", "books"
 end
