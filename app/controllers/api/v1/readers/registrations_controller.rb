@@ -20,7 +20,7 @@ class Api::V1::Readers::RegistrationsController < Devise::RegistrationsControlle
   end
 
   def sign_up_params
-    params.require(:reader).permit(:email, :password, :password_confirmation)
+    params.require(:reader).permit(:email, :password, :password_confirmation, :first_name, :last_name)
   end
 
   # Make sure this method is called by Devise when sign-up happens
