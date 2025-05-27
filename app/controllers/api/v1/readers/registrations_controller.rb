@@ -22,9 +22,4 @@ class Api::V1::Readers::RegistrationsController < Devise::RegistrationsControlle
   def sign_up_params
     params.require(:reader).permit(:email, :password, :password_confirmation, :first_name, :last_name)
   end
-
-  # Make sure this method is called by Devise when sign-up happens
-  def build_resource(sign_up_params)
-    self.resource = Reader.new(sign_up_params)
-  end
 end
