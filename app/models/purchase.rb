@@ -1,5 +1,5 @@
 class Purchase < ApplicationRecord
-  # belongs_to :listener
+  belongs_to :reader
   belongs_to :book
 
   # Enums for content_type and purchase_status
