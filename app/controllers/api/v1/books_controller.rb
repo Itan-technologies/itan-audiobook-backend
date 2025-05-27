@@ -149,12 +149,13 @@ class Api::V1::BooksController < ApplicationController
   end
 
   def book_params
-    params.require(:book).permit(:title, :description, :edition_number, contributors:[],
-                                 :primary_audience, :publishing_rights,
-                                 :ebook_price, :audiobook_price, :cover_image,
-                                 :audiobook_file, :ebook_file, :ai_generated_image, :explicit_images,
-                                 :subtitle, :bio, categories:[], keywords:[],
-                                 :book_isbn, :terms_and_conditions, tags:[], :publisher, 
-                                 :first_name, :last_name)
+    params.require(:book).permit(
+      :title, :description, :edition_number, :primary_audience, 
+      :publishing_rights, :ebook_price, :audiobook_price, 
+      :cover_image, :audiobook_file, :ebook_file, :ai_generated_image, 
+      :explicit_images, :subtitle, :bio, :book_isbn, 
+      :terms_and_conditions, :publisher, :first_name, :last_name,
+      contributors: [], categories: [], keywords: [], tags: []
+    )
   end
 end
