@@ -33,19 +33,7 @@ class Purchase < ApplicationRecord
   end
 
   # Helper methods
-  def completed?
-    purchase_status == 'completed'
-  end
-
-  def pending?
-    purchase_status == 'pending'
-  end
-
-  def failed?
-    purchase_status == 'failed'
-  end
-
-  def can_be_downloaded?
+ def can_be_downloaded?
     completed? && payment_verified_at.present?
   end
 
