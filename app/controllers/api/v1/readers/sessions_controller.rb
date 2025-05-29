@@ -40,6 +40,7 @@ class Api::V1::Readers::SessionsController < Devise::SessionsController
       iat: Time.current.to_i
     }
     
+    Rails.logger.info "Generating JWT with secret: #{ENV['DEVISE_JWT_SECRET_KEY'].present?}"
     JWT.encode(payload, ENV['DEVISE_JWT_SECRET_KEY'], 'HS256')
   end
 end
