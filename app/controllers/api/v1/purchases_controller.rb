@@ -30,7 +30,7 @@ class Api::V1::PurchasesController < ApplicationController
     paystack = PaystackService.new
     result = paystack.initialize_transaction(
       email: current_reader.email,
-      amount: (amount * 100).to_i, # Convert naira to kobo
+      amount: amount,
       metadata: {
         book_id: @book.id,
         reader_id: current_reader.id,
@@ -78,7 +78,7 @@ class Api::V1::PurchasesController < ApplicationController
         status: { code: 422, message: 'Payment reference is required' }
       }, status: :unprocessable_entity
     end
-
+  
     # Find the purchase record
     purchase = current_reader.purchases.find_by(transaction_reference: reference)
     unless purchase
@@ -86,12 +86,26 @@ class Api::V1::PurchasesController < ApplicationController
         status: { code: 404, message: 'Purchase record not found' }
       }, status: :not_found
     end
-
+  
     # Verify with Paystack
     paystack = PaystackService.new
     result = paystack.verify_transaction(reference)
-
+  
     if result[:success] && result[:data]['status'] == 'success'
+      # AMOUNT VERIFICATION ONLY
+      paystack_amount = result[:data]['amount'].to_f
+      expected_amount = purchase.amount.to_f
+      
+      unless paystack_amount == expected_amount
+        Rails.logger.error "Amount mismatch: Expected #{expected_amount}, got #{paystack_amount}"
+        
+        purchase.update!(purchase_status: 'failed')
+        
+        return render json: {
+          status: { code: 422, message: 'Payment amount verification failed' }
+        }, status: :unprocessable_entity
+      end
+      
       # Update purchase status
       purchase.update!(
         purchase_status: 'completed',
@@ -105,7 +119,7 @@ class Api::V1::PurchasesController < ApplicationController
           book_title: purchase.book.title,
           amount: purchase.amount,
           content_type: purchase.content_type,
-          download_link: generate_download_link(purchase) # Optional
+          read_link: generate_read_link(purchase)
         }
       }
     else
@@ -137,7 +151,7 @@ class Api::V1::PurchasesController < ApplicationController
           content_type: purchase.content_type,
           amount: purchase.amount,
           purchase_date: purchase.purchase_date,
-          download_link: generate_download_link(purchase)
+          read_link: generate_read_link(purchase)
         }
       end
     }
@@ -148,26 +162,42 @@ class Api::V1::PurchasesController < ApplicationController
   def authenticate_reader!
     token = request.headers['Authorization']&.split(' ')&.last
     
+    Rails.logger.info "Authorization header: #{request.headers['Authorization']}"
+    Rails.logger.info "Extracted token: #{token&.truncate(50)}"
+    
     unless token
+      Rails.logger.error "No token provided"
       return render json: {
         status: { code: 401, message: 'Authentication token required' }
       }, status: :unauthorized
     end
   
     begin
+      Rails.logger.info "JWT Secret exists: #{ENV['DEVISE_JWT_SECRET_KEY'].present?}"
+      
       decoded_token = JWT.decode(
         token, 
-        ENV['DEVISE_JWT_SECRET_KEY'],    # ← Use the correct JWT secret
+        ENV['DEVISE_JWT_SECRET_KEY'],
         true, 
         { algorithm: 'HS256' }
       )
       
-      reader_id = decoded_token[0]['sub']  # ← Use 'sub' not 'reader_id'
+      Rails.logger.info "Decoded token payload: #{decoded_token[0]}"
+      
+      reader_id = decoded_token[0]['sub']
       @current_reader = Reader.find(reader_id)
-    rescue JWT::DecodeError, ActiveRecord::RecordNotFound => e
-      Rails.logger.error "JWT Authentication failed: #{e.message}"
+      
+      Rails.logger.info "Authenticated reader: #{@current_reader.email}"
+      
+    rescue JWT::DecodeError => e
+      Rails.logger.error "JWT Decode Error: #{e.message}"
       render json: {
         status: { code: 401, message: 'Invalid authentication token' }
+      }, status: :unauthorized
+    rescue ActiveRecord::RecordNotFound => e
+      Rails.logger.error "Reader not found: #{e.message}"
+      render json: {
+        status: { code: 401, message: 'Reader not found' }
       }, status: :unauthorized
     end
   end
@@ -195,21 +225,21 @@ class Api::V1::PurchasesController < ApplicationController
     end
   end
 
-  def generate_download_link(purchase)
-    # Implement secure download link generation
-    # This could be a signed URL or a secure endpoint
-    "#{ENV.fetch('FRONTEND_URL', nil)}/downloads/#{purchase.id}?token=#{generate_secure_token(purchase)}"
-  end
-
   def generate_secure_token(purchase)
-    # Generate a secure token for download access
     JWT.encode(
       { 
         purchase_id: purchase.id, 
         reader_id: purchase.reader_id,
-        exp: 24.hours.from_now.to_i 
+        content_type: purchase.content_type,
+        exp: 1.hour.from_now.to_i 
       },
-      Rails.application.credentials.secret_key_base
+      ENV['DEVISE_JWT_SECRET_KEY'],
+      'HS256'
     )
+  end
+
+  def generate_read_link(purchase)
+    token = generate_secure_token(purchase)
+    "#{ENV.fetch('API_BASE_URL', 'http://localhost:3000')}/api/v1/reader/#{purchase.id}?token=#{token}"
   end
 end
