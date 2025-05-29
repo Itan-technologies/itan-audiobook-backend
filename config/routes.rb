@@ -67,6 +67,15 @@ Rails.application.routes.draw do
         end
       end
     
+      # ✅ READER - Complete routes for DRM protected reading
+      resources :reader, only: [:show] do
+        member do
+          get :metadata      # GET /api/v1/reader/:id/metadata?token=...
+          get :page         # GET /api/v1/reader/:id/page?page=1&token=...
+          # get :audio_chunk  # GET /api/v1/reader/:id/audio_chunk?start=120&token=...
+        end
+      end
+      
       resource :direct_uploads, only: [:create]
     end
   end
