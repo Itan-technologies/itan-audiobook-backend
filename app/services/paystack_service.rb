@@ -13,7 +13,7 @@ class PaystackService
   def initialize_transaction(email:, amount:, metadata: {}, callback_url: nil)
     body = {
       email: email,
-      amount: amount,
+      amount: (amount * 100).to_i,      
       metadata: metadata
     }
 
@@ -26,6 +26,29 @@ class PaystackService
     )
 
     handle_response(response)
+  end
+
+  def verify_transaction(reference)
+    response = self.class.get("/transaction/verify/#{reference}", {
+      headers: @headers
+    })
+
+    if response.success?
+      {
+        success: true,
+        data: response.parsed_response['data']
+      }
+    else
+      {
+        success: false,
+        error: response.parsed_response['message'] || 'Payment verification failed'
+      }
+    end
+    rescue => e
+    {
+      success: false,
+      error: e.message
+    }
   end
 
   private
