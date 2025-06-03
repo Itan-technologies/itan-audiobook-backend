@@ -6,7 +6,8 @@ class BookSerializer
              :unique_book_id, :unique_audio_id, :created_at, :updated_at,
              :ai_generated_image, :explicit_images, :subtitle, :bio,
              :categories, :keywords, :book_isbn, :terms_and_conditions, 
-             :approval_status, :admin_feedback, :tags, :publisher, :first_name, :last_name 
+             :approval_status, :admin_feedback, :tags, :publisher, :first_name, :last_name,
+             :total_pages 
 
   attribute :cover_image_url do |book|
     if book.cover_image.attached?
@@ -29,4 +30,16 @@ class BookSerializer
       end
     end
   end
+
+  attribute :audiobook_file_url do |book|
+    if book.audiobook_file.attached?
+      begin
+        Rails.application.routes.url_helpers.url_for(book.audiobook_file)
+      rescue StandardError => e
+        Rails.logger.error("Failed to generate audiobook file URL for book #{book.id}: #{e.message}")
+        nil
+      end
+    end
+  end
+
 end

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2025_05_29_144225) do
+ActiveRecord::Schema[7.1].define(version: 2025_06_03_155031) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pgcrypto"
   enable_extension "plpgsql"
@@ -91,7 +91,7 @@ ActiveRecord::Schema[7.1].define(version: 2025_05_29_144225) do
     t.string "title"
     t.text "description"
     t.string "edition_number"
-    t.string "contributors", array: true
+    t.jsonb "contributors"
     t.integer "primary_audience"
     t.boolean "publishing_rights"
     t.integer "ebook_price"
@@ -104,7 +104,7 @@ ActiveRecord::Schema[7.1].define(version: 2025_05_29_144225) do
     t.boolean "explicit_images"
     t.string "subtitle"
     t.text "bio"
-    t.string "categories", array: true
+    t.jsonb "categories"
     t.string "keywords", array: true
     t.integer "book_isbn"
     t.boolean "terms_and_conditions"
