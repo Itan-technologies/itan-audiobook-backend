@@ -224,7 +224,7 @@ class Api::V1::PurchasesController < ApplicationController
  
   # Enhanced webhook signature verification with development bypass
   def verify_webhook_signature
-    # DEVELOPMENT BYPASS
+    # DEVELOPMENT BYPASSED
     # if Rails.env.development? && (params[:skip_verification] == 'true' || request.headers['X-Skip-Verification'] == 'true')
     #   Rails.logger.warn "⚠️ BYPASSING webhook signature verification in development!"
     #   Rails.logger.warn "⚠️ DO NOT USE THIS IN PRODUCTION!"
