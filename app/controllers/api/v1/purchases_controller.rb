@@ -1,66 +1,16 @@
 class Api::V1::PurchasesController < ApplicationController
   before_action :authenticate_reader!
+  # skip_before_action :authenticate_reader!, only: [:verify]
   before_action :set_book, only: [:create]
 
   def create
-    # Check if reader already owns this book
-    existing_purchase = current_reader.purchases.find_by(
-      book: @book, 
-      purchase_status: 'completed'
-    )
+    service = PurchaseService.new(current_reader, @book, params[:content_type])
+    result = service.create_purchase
     
-    if existing_purchase
-      return render json: {
-        status: { code: 422, message: 'You already own this book' }
-      }, status: :unprocessable_entity
-    end
-
-    # Determine content type and price
-    content_type = params[:content_type] || 'ebook'
-    amount = content_type == 'ebook' ? @book.ebook_price : @book.audiobook_price
-
-    # Validate that the book has the requested content type available
-    unless book_has_content_type?(content_type)
-      return render json: {
-        status: { code: 422, message: "#{content_type.capitalize} not available for this book" }
-      }, status: :unprocessable_entity
-    end
-
-    # Initialize payment
-    paystack = PaystackService.new
-    result = paystack.initialize_transaction(
-      email: current_reader.email,
-      amount: amount,
-      metadata: {
-        book_id: @book.id,
-        reader_id: current_reader.id,
-        content_type: content_type,
-        book_title: @book.title
-      },
-      callback_url: "#{ENV.fetch('FRONTEND_URL', nil)}/payment/callback"
-    )
-
     if result[:success]
-      # Create purchase record
-      purchase = current_reader.purchases.create!(
-        book: @book,
-        amount: amount,
-        content_type: content_type,
-        purchase_status: 'pending',
-        purchase_date: Time.current,
-        transaction_reference: result[:data]['reference']
-      )
-
       render json: {
-        status: { code: 200, message: 'Payment initialized successfully' },
-        data: {
-          authorization_url: result[:data]['authorization_url'],
-          access_code: result[:data]['access_code'],
-          reference: result[:data]['reference'],
-          purchase_id: purchase.id,
-          amount: amount,
-          content_type: content_type
-        }
+        status: { code: 200, message: 'Purchase created successfully' },
+        data: result[:data]
       }
     else
       render json: {
@@ -73,65 +23,37 @@ class Api::V1::PurchasesController < ApplicationController
   def verify
     reference = params[:reference]
     
-    unless reference.present?
-      return render json: {
-        status: { code: 422, message: 'Payment reference is required' }
-      }, status: :unprocessable_entity
+    # 1. CRITICAL: Verify webhook signature first
+    unless verify_webhook_signature
+      Rails.logger.error "Invalid webhook signature for reference: #{reference}"
+      return render json: { 
+        status: { code: 401, message: 'Unauthorized webhook' } 
+      }, status: :unauthorized
     end
-  
-    # Find the purchase record
-    purchase = current_reader.purchases.find_by(transaction_reference: reference)
-    unless purchase
-      return render json: {
-        status: { code: 404, message: 'Purchase record not found' }
-      }, status: :not_found
-    end
-  
-    # Verify with Paystack
-    paystack = PaystackService.new
-    result = paystack.verify_transaction(reference)
-  
-    if result[:success] && result[:data]['status'] == 'success'
-      # AMOUNT VERIFICATION ONLY
-      paystack_amount = result[:data]['amount'].to_f
-      expected_amount = purchase.amount.to_f
-      
-      unless paystack_amount == expected_amount
-        Rails.logger.error "Amount mismatch: Expected #{expected_amount}, got #{paystack_amount}"
-        
-        purchase.update!(purchase_status: 'failed')
-        
-        return render json: {
-          status: { code: 422, message: 'Payment amount verification failed' }
-        }, status: :unprocessable_entity
-      end
-      
-      # Update purchase status
-      purchase.update!(
-        purchase_status: 'completed',
-        payment_verified_at: Time.current
-      )
-      
+    
+    # 2. Use your PaymentVerificationService
+    service = PaymentVerificationService.new(reference, current_reader)
+    result = service.verify
+    
+    # 3. Handle result
+    if result[:success]
       render json: {
         status: { code: 200, message: 'Payment verified successfully' },
-        data: {
-          purchase_id: purchase.id,
-          book_title: purchase.book.title,
-          amount: purchase.amount,
-          content_type: purchase.content_type,
-          read_link: generate_read_link(purchase)
-        }
+        data: result[:data]
       }
     else
-      # Mark as failed
-      purchase.update!(purchase_status: 'failed')
-      
       render json: {
-        status: { code: 422, message: 'Payment verification failed' }
-      }, status: :unprocessable_entity
+        status: { code: result[:status_code], message: result[:error] }
+      }, status: map_http_status_code(result[:status_code])
     end
+    
+    rescue StandardError => e
+    Rails.logger.error "Payment verification error: #{e.message}"
+    render json: {
+      status: { code: 500, message: 'Internal server error' }
+    }, status: :internal_server_error
   end
-
+  
   # Get user's purchase history
   def index
     purchases = current_reader.purchases.includes(:book)
@@ -146,15 +68,76 @@ class Api::V1::PurchasesController < ApplicationController
           book: {
             id: purchase.book.id,
             title: purchase.book.title,
-            author: purchase.book.author&.full_name
+            author_first_name: purchase.book.first_name
           },
           content_type: purchase.content_type,
           amount: purchase.amount,
           purchase_date: purchase.purchase_date,
-          read_link: generate_read_link(purchase)
+          reading_token: generate_reading_token(purchase)
         }
       end
     }
+  end
+
+  def check_status
+    reference = params[:reference]
+    purchase = Purchase.find_by(transaction_reference: reference)
+    
+    if purchase.nil?
+      return render json: {
+        status: { code: 404, message: 'Purchase not found' }
+      }, status: :not_found
+    end
+    
+    # If purchase is completed, include reading token
+    reading_token = nil
+    if purchase.purchase_status == 'completed'
+      reading_token = generate_reading_token(purchase)
+    end
+    
+    render json: {
+      status: { code: 200 },
+      data: {
+        purchase_id: purchase.id,
+        purchase_status: purchase.purchase_status,
+        book_id: purchase.book.id,
+        book_title: purchase.book.title,
+        content_type: purchase.content_type,
+        purchase_date: purchase.purchase_date,
+        reading_token: reading_token
+      }
+    }
+  end
+
+  def refresh_reading_token
+    purchase_id = params[:purchase_id]
+    
+    unless purchase_id
+      return render json: { 
+        status: { code: 400, message: 'Purchase ID is required' } 
+      }, status: :bad_request
+    end
+    
+    begin
+      purchase = current_reader.purchases.find(purchase_id)
+      
+      if purchase.purchase_status == 'completed'
+        render json: {
+          status: { code: 200 },
+          data: {
+            reading_token: generate_reading_token(purchase)
+          }
+        }
+      else
+        render json: {
+          status: { code: 403, message: 'Access denied' }
+        }, status: :forbidden
+      end
+    rescue ActiveRecord::RecordNotFound
+      render json: {
+        status: { code: 404, message: 'Purchase not found' }
+      }, status: :not_found
+    end
   end
 
   private
@@ -225,21 +208,74 @@ class Api::V1::PurchasesController < ApplicationController
     end
   end
 
-  def generate_secure_token(purchase)
+  def generate_reading_token(purchase)
     JWT.encode(
       { 
-        purchase_id: purchase.id, 
-        reader_id: purchase.reader_id,
+        sub: purchase.reader_id,           # Reader ID as subject
+        purchase_id: purchase.id,
         content_type: purchase.content_type,
-        exp: 1.hour.from_now.to_i 
+        book_id: purchase.book.id,
+        exp: 4.hours.from_now.to_i        # 4 hours reading session
       },
       ENV['DEVISE_JWT_SECRET_KEY'],
       'HS256'
     )
   end
-
-  def generate_read_link(purchase)
-    token = generate_secure_token(purchase)
-    "#{ENV.fetch('API_BASE_URL', 'http://localhost:3000')}/api/v1/reader/#{purchase.id}?token=#{token}"
+ 
+  # Enhanced webhook signature verification with development bypass
+  def verify_webhook_signature
+    # DEVELOPMENT BYPASS
+    if Rails.env.development? && (params[:skip_verification] == 'true' || request.headers['X-Skip-Verification'] == 'true')
+      Rails.logger.warn "⚠️ BYPASSING webhook signature verification in development!"
+      Rails.logger.warn "⚠️ DO NOT USE THIS IN PRODUCTION!"
+      return true
+    end
+  
+    payload = request.raw_post
+    signature = request.headers['X-Paystack-Signature']
+    
+    # Add debug logging
+    Rails.logger.debug "Webhook received for verification"
+    Rails.logger.debug "Headers: #{request.headers.to_h.select { |k, v| k.start_with?('HTTP_X') }.inspect}"
+    Rails.logger.debug "Signature present: #{signature.present?}"
+    Rails.logger.debug "Payload length: #{payload&.length || 0}"
+    
+    return false unless signature.present? && payload.present?
+    
+    webhook_secret = ENV['PAYSTACK_WEBHOOK_SECRET'] || ENV['PAYSTACK_SECRET_KEY']
+    expected = OpenSSL::HMAC.hexdigest('sha512', webhook_secret, payload)
+    
+    result = ActiveSupport::SecurityUtils.secure_compare(signature, expected)
+    
+    if result
+      Rails.logger.info "✅ Webhook signature verified successfully"
+    else
+      Rails.logger.error "❌ Webhook signature verification failed"
+      Rails.logger.debug "Expected: #{expected[0..10]}..." if expected
+      Rails.logger.debug "Received: #{signature[0..10]}..." if signature
+    end
+    
+    result
   end
+
+# Map status codes to HTTP symbols
+def map_http_status_code(code)
+  case code
+  when 409 then :conflict
+  when 402 then :payment_required
+  when 502 then :bad_gateway
+  else :unprocessable_entity
+  end
+end
+
+# Updated signature verification method (fix your existing one)
+  # def verify_paystack_signature(payload, signature)
+  #   return false unless signature.present? && payload.present?
+
+  #   # Use webhook secret, fallback to secret key for MVP
+  #   webhook_secret = ENV['PAYSTACK_WEBHOOK_SECRET'] || ENV['PAYSTACK_SECRET_KEY']
+  #   expected = OpenSSL::HMAC.hexdigest('sha512', webhook_secret, payload)
+
+  #   ActiveSupport::SecurityUtils.secure_compare(signature, expected)
+  # end
 end
