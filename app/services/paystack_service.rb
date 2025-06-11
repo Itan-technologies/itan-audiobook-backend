@@ -10,23 +10,37 @@ class PaystackService
     }
   end
 
-  def initialize_transaction(email:, amount:, metadata: {}, callback_url: nil)
-    body = {
-      email: email,
-      amount: (amount * 100).to_i,      
-      metadata: metadata
-    }
+  def initialize_transaction(email:, amount:, reference: nil, metadata: {}, callback_url: nil)
+  # Convert naira to kobo for Paystack
+  amount_in_kobo = (amount * 100).to_i
 
-    body[:callback_url] = callback_url if callback_url
+  # Generate reference if not provided
+  reference ||= generate_reference
 
-    response = self.class.post(
-      '/transaction/initialize',
-      headers: @headers,
-      body: body.to_json
-    )
+  body = {
+    email: email,
+    amount: amount_in_kobo, 
+    reference: reference,     # Now correctly defined
+    metadata: metadata
+  }
 
-    handle_response(response)
+  body[:callback_url] = callback_url if callback_url
+
+  response = self.class.post(
+    '/transaction/initialize',
+    headers: @headers,
+    body: body.to_json
+  )
+
+  result = handle_response(response)
+  
+  # Include reference in the result
+  if result[:success]
+    result[:reference] = reference
   end
+  
+  result  # Explicitly return the result
+end
 
   def verify_transaction(reference)
     response = self.class.get("/transaction/verify/#{reference}", {
@@ -68,5 +82,9 @@ class PaystackService
       }
 
     end
+  end
+
+  def generate_reference
+    "TRX_#{SecureRandom.hex(8)}_#{Time.current.to_i}"
   end
 end
