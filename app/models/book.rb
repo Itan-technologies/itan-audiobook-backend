@@ -35,6 +35,15 @@ class Book < ApplicationRecord
   # Only show approved books to the public
   scope :publicly_visible, -> { approved }
 
+  # Enable nested attributes
+  # accepts_nested_attributes_for :book_contributors, 
+  #                               allow_destroy: true,
+  #                               reject_if: :all_blank
+                                
+  # accepts_nested_attributes_for :book_categories,
+                                # allow_destroy: true,
+                                # reject_if: :all_blank
+
   # Add a method to get standardized cover
   # def standardized_cover_url
   #   return nil unless cover_image.attached?
