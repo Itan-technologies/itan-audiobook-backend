@@ -68,6 +68,71 @@ class Api::V1::BooksController < ApplicationController
     }
   end
 
+  def content
+    # Get reading token from Authorization header
+    token = request.headers['Authorization']&.split(' ')&.last
+    
+    unless token
+      return render json: { error: 'Reading token required' }, status: :unauthorized
+    end
+    
+    begin
+      # Decode and verify token
+      payload = JWT.decode(token, ENV['DEVISE_JWT_SECRET_KEY'], true, { algorithm: 'HS256' })[0]
+      
+      # Check if token is for requested book and not expired
+      if payload['book_id'] != params[:id] || Time.at(payload['exp']) < Time.current
+        return render json: { error: 'Invalid or expired token' }, status: :forbidden
+      end
+      
+      # Serve different content based on type
+      book = Book.find(params[:id])
+      content_type = payload['content_type']
+      
+      if content_type == 'ebook'
+        # For ebooks: Return file URL or relevant data
+        if book.ebook_file.attached?
+          # Generate a temporary URL for the file
+          url = Rails.application.routes.url_helpers.rails_blob_url(book.ebook_file, only_path: false)
+          
+          render json: {
+            title: book.title,
+            url: url,
+            format: book.ebook_file.content_type || "application/pdf"
+          }
+        else
+          render json: {
+            title: book.title,
+            error: "Book content not available",
+            format: "unknown"
+          }, status: :not_found
+        end
+      else
+        # For audiobooks: Return streaming URL or file URLs
+        if book.audiobook_file.attached?
+          url = Rails.application.routes.url_helpers.rails_blob_url(book.audiobook_file, only_path: false)
+          
+          render json: {
+            title: book.title,
+            audio_files: [url],
+            duration: book.respond_to?(:audio_duration) ? book.audio_duration : 0
+          }
+        else
+          render json: {
+            title: book.title,
+            error: "Audiobook content not available",
+            audio_files: []
+          }, status: :not_found
+        end
+      end
+    rescue JWT::DecodeError
+      render json: { error: 'Invalid reading token' }, status: :unauthorized
+    rescue StandardError => e
+      Rails.logger.error "Error serving book content: #{e.message}\n#{e.backtrace.join("\n")}"
+      render json: { error: 'Error retrieving book content' }, status: :internal_server_error
+    end
+  end 
+
   private
 
   def create_book_with_attachments
@@ -148,6 +213,14 @@ class Api::V1::BooksController < ApplicationController
     }, status: :forbidden
   end
 
+  def audio_url(file)
+    # Replace with appropriate URL generation for your storage solution
+    # For ActiveStorage:
+    # Rails.application.routes.url_helpers.rails_blob_url(file, only_path: false)
+    # For simple paths:
+    "/storage/audiobooks/#{File.basename(file)}"
+  end
+
   def book_params
     params.require(:book).permit(
       :title, :description, :edition_number, :primary_audience, 
@@ -155,7 +228,9 @@ class Api::V1::BooksController < ApplicationController
       :cover_image, :audiobook_file, :ebook_file, :ai_generated_image, 
       :explicit_images, :subtitle, :bio, :book_isbn, 
       :terms_and_conditions, :publisher, :first_name, :last_name,
-      contributors: [], categories: [], keywords: [], tags: []
+      keywords: [], tags: [],
+      book_contributors_attributes: [:id, :role, :first_name, :last_name], 
+      book_categories_attributes: [:id, :main_genre, :sub_category],
     )
   end
 end
