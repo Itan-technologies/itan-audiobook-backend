@@ -25,7 +25,6 @@ class Api::V1::Admin::BooksController < ApplicationController
   
     # PATCH /api/v1/admin/books/:id/approve
     def approve
-      # If you actually need feedback for approvals:
       if params[:admin_feedback].blank?
         return render json: {
           status: { code: 422, message: 'Admin feedback is required when approving a book' }
