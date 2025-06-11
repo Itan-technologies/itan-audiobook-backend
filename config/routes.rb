@@ -64,6 +64,14 @@ Rails.application.routes.draw do
       resources :purchases, only: [:create, :index] do
         collection do
           post :verify 
+          post :refresh_reading_token
+          get :check_status
+        end
+      end
+
+      resources :books do
+        member do
+          get :content  # Creates GET /api/v1/books/:id/content
         end
       end
     
@@ -72,6 +80,7 @@ Rails.application.routes.draw do
         member do
           get :metadata      # GET /api/v1/reader/:id/metadata?token=...
           get :page         # GET /api/v1/reader/:id/page?page=1&token=...
+          # post :refresh_reading_token
           # get :audio_chunk  # GET /api/v1/reader/:id/audio_chunk?start=120&token=...
         end
       end
