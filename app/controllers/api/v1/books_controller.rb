@@ -6,6 +6,13 @@ class Api::V1::BooksController < ApplicationController
   before_action :authenticate_author!, only: %i[create update destroy my_books]
   before_action :authorize_author!, only: %i[update destroy]
 
+  # Normalize JSON arrays for book attributes
+  before_action :normalize_json_arrays, only: %i[create update]
+
+  before_action :convert_price_to_cents, only: %i[create update]
+
+  respond_to :json
+
   # GET /api/v1/books
   def index
     # Show only approved books to everyone
@@ -30,8 +37,7 @@ class Api::V1::BooksController < ApplicationController
   # POST /api/v1/books
 
   def create
-    @book = current_author.books.new(book_params)
-
+    @book = current_author.books.new(book_params)    
     begin
       if create_book_with_attachments
         render_success_response(@book, 'Book created successfully.')
@@ -46,7 +52,7 @@ class Api::V1::BooksController < ApplicationController
   end
 
   # PUT/PATCH /api/v1/books/:id
-  def update
+  def update    
     if @book.update(book_params)
       render json: {
         status: { code: 200, message: 'Book updated successfully.' },
@@ -199,7 +205,7 @@ class Api::V1::BooksController < ApplicationController
   # Used to manage error, record not found
   def set_book
     @book = Book.find(params[:id])
-  rescue ActiveRecord::RecordNotFound
+    rescue ActiveRecord::RecordNotFound
     render json: {
       status: { code: 404, message: 'Book not found' }
     }, status: :not_found
@@ -221,6 +227,33 @@ class Api::V1::BooksController < ApplicationController
     "/storage/audiobooks/#{File.basename(file)}"
   end
 
+  def normalize_json_arrays
+    %i[contributors categories keywords tags].each do |field|
+      if params[:book][field].is_a?(String)
+        begin
+          params[:book][field] = JSON.parse(params[:book][field])
+        rescue JSON::ParserError
+          Rails.logger.warn("Failed to parse JSON for #{field}")
+          params[:book][field] = []
+        end
+      end
+    end
+  end
+
+  # Add this to your books_controller.rb in the private section
+  def convert_price_to_cents
+    return unless params[:book][:ebook_price].present?
+    
+    begin
+      # Convert from decimal dollars to integer cents
+      dollars = BigDecimal(params[:book][:ebook_price])
+      params[:book][:ebook_price] = (dollars * 100).round
+      Rails.logger.info "Converted price: $#{dollars} → #{params[:book][:ebook_price]} cents"
+    rescue ArgumentError => e
+      Rails.logger.warn "Failed to convert price: #{e.message}"
+    end
+  end
+
   def book_params
     params.require(:book).permit(
       :title, :description, :edition_number, :primary_audience, 
@@ -228,7 +261,10 @@ class Api::V1::BooksController < ApplicationController
       :cover_image, :audiobook_file, :ebook_file, :ai_generated_image, 
       :explicit_images, :subtitle, :bio, :book_isbn, 
       :terms_and_conditions, :publisher, :first_name, :last_name,
-      keywords: [], tags: [],
+      keywords: [], 
+      tags: [], 
+      categories: [],
+      contributors: [:id, :role, :firstName, :lastName],
       book_contributors_attributes: [:id, :role, :first_name, :last_name], 
       book_categories_attributes: [:id, :main_genre, :sub_category],
     )

@@ -15,12 +15,12 @@ class Book < ApplicationRecord
 
   # Validations
   validates :title, presence: true
-  validates :unique_book_id, uniqueness: true, allow_nil: true
-  validates :unique_audio_id, uniqueness: true, allow_nil: true
-  validate  :tags_must_be_valid
-  validate  :keywords_must_be_valid
-  validate :contributors_must_be_valid
-  validate :categories_must_be_valid
+  # validates :unique_book_id, uniqueness: true, allow_nil: true
+  # validates :unique_audio_id, uniqueness: true, allow_nil: true
+  # validate  :tags_must_be_valid
+  # validate  :keywords_must_be_valid
+  # validate :contributors_must_be_valid
+  # validate :categories_must_be_valid
 
   enum approval_status: {
     pending: 'pending',
@@ -106,46 +106,46 @@ class Book < ApplicationRecord
     end
   end
 
-  def tags_must_be_valid
-    if tags.present?
-      if !tags.is_a?(Array)
-        errors.add(:tags, "must be an array")
-      elsif tags.any? { |tag| !tag.is_a?(String) || tag.blank? }
-        errors.add(:tags, "can only contain non-empty strings")
-      end
-    end
-  end
+  # def tags_must_be_valid
+  #   if tags.present?
+  #     if !tags.is_a?(Array)
+  #       errors.add(:tags, "must be an array")
+  #     elsif tags.any? { |tag| !tag.is_a?(String) || tag.blank? }
+  #       errors.add(:tags, "can only contain non-empty strings")
+  #     end
+  #   end
+  # end
 
-  def keywords_must_be_valid
-    if keywords.present?
-      if !keywords.is_a?(Array)
-        errors.add(:keywords, "must be an array")
-      elsif keywords.any? { |keyword| !keyword.is_a?(String) || keyword.blank? }
-        errors.add(:keywords, "can only contain non-empty strings")
-      end
-    end
-  end
+  # def keywords_must_be_valid
+  #   if keywords.present?
+  #     if !keywords.is_a?(Array)
+  #       errors.add(:keywords, "must be an array")
+  #     elsif keywords.any? { |keyword| !keyword.is_a?(String) || keyword.blank? }
+  #       errors.add(:keywords, "can only contain non-empty strings")
+  #     end
+  #   end
+  # end
 
-  def contributors_must_be_valid
-    if contributors.present?
-      unless contributors.is_a?(Array)
-        errors.add(:contributors, "must be an array")
-        return
-      end
+  # def contributors_must_be_valid
+  #   if contributors.present?
+  #     unless contributors.is_a?(Array)
+  #       errors.add(:contributors, "must be an array")
+  #       return
+  #     end
 
-      if contributors.empty?
-        errors.add(:contributors, "must have at least one contributor")
-        return
-      end
-    end 
-  end   
+  #     if contributors.empty?
+  #       errors.add(:contributors, "must have at least one contributor")
+  #       return
+  #     end
+  #   end 
+  # end   
 
-  def categories_must_be_valid
-    if categories.present?
-      unless categories.is_a?(Array)
-        errors.add(:categories, "must be an array")
-        return
-      end
-    end
-  end
+  # def categories_must_be_valid
+  #   if categories.present?
+  #     unless categories.is_a?(Array)
+  #       errors.add(:categories, "must be an array")
+  #       return
+  #     end
+  #   end
+  # end
 end
