@@ -259,14 +259,14 @@ class Api::V1::PurchasesController < ApplicationController
   end
 
 # Map status codes to HTTP symbols
-def map_http_status_code(code)
-  case code
-  when 409 then :conflict
-  when 402 then :payment_required
-  when 502 then :bad_gateway
-  else :unprocessable_entity
+  def map_http_status_code(code)
+    case code
+    when 409 then :conflict
+    when 402 then :payment_required
+    when 502 then :bad_gateway
+    else :unprocessable_entity
+    end
   end
-end
 
 # Updated signature verification method (fix your existing one)
   # def verify_paystack_signature(payload, signature)
