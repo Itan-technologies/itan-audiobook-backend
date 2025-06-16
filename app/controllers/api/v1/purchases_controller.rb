@@ -1,6 +1,7 @@
 class Api::V1::PurchasesController < ApplicationController
   before_action :authenticate_reader!
-  # skip_before_action :authenticate_reader!, only: [:verify]
+  skip_before_action :authenticate_reader!, only: [:verify]
+  # skip_before_action :verify_authenticity_token, only: [:verify]
   before_action :set_book, only: [:create]
 
   def create
@@ -21,7 +22,13 @@ class Api::V1::PurchasesController < ApplicationController
 
   # Verify payment after Paystack callback
   def verify
-    reference = params[:reference]
+    Rails.logger.info "============ PAYSTACK WEBHOOK RECEIVED ============"
+    Rails.logger.info "Headers: #{request.headers.to_h.select { |k,v| k.to_s.downcase.include?('x-') }.inspect}"
+    Rails.logger.info "Params: #{params.inspect}"
+    Rails.logger.info "Raw Body: #{request.raw_post.truncate(100)}" # Truncate for security
+  
+    # Extract reference from the correct location
+    reference = params[:data][:reference]
     
     # 1. CRITICAL: Verify webhook signature first
     unless verify_webhook_signature
@@ -31,27 +38,36 @@ class Api::V1::PurchasesController < ApplicationController
       }, status: :unauthorized
     end
     
-    # 2. Use your PaymentVerificationService
-    service = PaymentVerificationService.new(reference, current_reader)
-    result = service.verify
+    # 2. Find purchase directly without using current_reader
+    purchase = Purchase.find_by(transaction_reference: reference)
     
-    # 3. Handle result
-    if result[:success]
+    if purchase.nil?
+      Rails.logger.error "Purchase not found for reference: #{reference}"
+      return render json: {
+        status: { code: 404, message: 'Purchase not found' }
+      }, status: :not_found
+    end
+    
+    # 3. Update purchase status directly - IMPORTANT: No validation checks
+    if purchase.update(purchase_status: 'completed')
+      Rails.logger.info "✅ Purchase #{purchase.id} marked as completed"
       render json: {
         status: { code: 200, message: 'Payment verified successfully' },
-        data: result[:data]
+        data: { purchase_id: purchase.id }
       }
     else
+      Rails.logger.error "❌ Failed to update purchase: #{purchase.errors.full_messages.join(', ')}"
       render json: {
-        status: { code: result[:status_code], message: result[:error] }
-      }, status: map_http_status_code(result[:status_code])
+        status: { code: 422, message: 'Failed to update purchase status' }
+      }, status: :unprocessable_entity
     end
     
     rescue StandardError => e
-    Rails.logger.error "Payment verification error: #{e.message}"
-    render json: {
-      status: { code: 500, message: 'Internal server error' }
-    }, status: :internal_server_error
+      Rails.logger.error "Payment verification error: #{e.message}"
+      Rails.logger.error e.backtrace.join("\n")
+      render json: {
+        status: { code: 500, message: 'Internal server error' }
+      }, status: :internal_server_error
   end
   
   # Get user's purchase history
@@ -232,7 +248,7 @@ class Api::V1::PurchasesController < ApplicationController
     # end
   
     payload = request.raw_post
-    signature = request.headers['X-Paystack-Signature']
+    signature = request.headers['HTTP_X_PAYSTACK_SIGNATURE']
     
     # Add debug logging
     Rails.logger.debug "Webhook received for verification"
@@ -242,7 +258,7 @@ class Api::V1::PurchasesController < ApplicationController
     
     return false unless signature.present? && payload.present?
     
-    webhook_secret = ENV['PAYSTACK_WEBHOOK_SECRET'] || ENV['PAYSTACK_SECRET_KEY']
+    webhook_secret = ENV['PAYSTACK_SECRET_KEY']
     expected = OpenSSL::HMAC.hexdigest('sha512', webhook_secret, payload)
     
     result = ActiveSupport::SecurityUtils.secure_compare(signature, expected)
