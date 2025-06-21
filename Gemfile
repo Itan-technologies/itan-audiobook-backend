@@ -24,6 +24,8 @@ gem 'pdf-reader'
 
 gem 'prawn'
 
+gem 'groupdate'
+
 gem 'devise-two-factor' # For TOTP (Time-based One-Time Password)
 
 gem 'twilio-ruby', '~> 7.5', '>= 7.5.2' # For SMS-based 2FA

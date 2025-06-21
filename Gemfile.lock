@@ -166,6 +166,8 @@ GEM
     ffi (1.17.1-x86_64-linux-musl)
     globalid (1.2.1)
       activesupport (>= 6.1)
+    groupdate (6.7.0)
+      activesupport (>= 7.1)
     hashery (2.1.2)
     hashie (5.0.0)
     httparty (0.23.0)
@@ -428,6 +430,7 @@ DEPENDENCIES
   devise-two-factor
   dotenv-rails
   down
+  groupdate
   httparty
   image_processing (~> 1.2)
   jsonapi-serializer
