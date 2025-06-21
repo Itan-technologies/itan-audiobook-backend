@@ -51,6 +51,7 @@ class Api::V1::PurchasesController < ApplicationController
     # 3. Update purchase status directly - IMPORTANT: No validation checks
     if purchase.update(purchase_status: 'completed')
       Rails.logger.info "✅ Purchase #{purchase.id} marked as completed"
+      RevenueCalculationService.new(purchase).calculate
       render json: {
         status: { code: 200, message: 'Payment verified successfully' },
         data: { purchase_id: purchase.id }
