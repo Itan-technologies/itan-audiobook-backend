@@ -1,4 +1,3 @@
-# app/controllers/api/v1/admin/books_controller.rb
 class Api::V1::Admin::BooksController < ApplicationController
     before_action :authenticate_admin!
     before_action :set_book, only: [:show, :approve, :reject]
