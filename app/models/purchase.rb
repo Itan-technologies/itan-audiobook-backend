@@ -1,6 +1,7 @@
 class Purchase < ApplicationRecord
   belongs_to :reader
   belongs_to :book
+  has_one :author_revenue
 
   # Enums for content_type and purchase_status
   enum content_type: { ebook: 'ebook', audiobook: 'audiobook' }

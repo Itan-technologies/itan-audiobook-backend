@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2025_06_03_155031) do
+ActiveRecord::Schema[7.1].define(version: 2025_06_20_160428) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pgcrypto"
   enable_extension "plpgsql"
@@ -53,6 +53,38 @@ ActiveRecord::Schema[7.1].define(version: 2025_06_03_155031) do
     t.datetime "updated_at", null: false
     t.index ["email"], name: "index_admins_on_email", unique: true
     t.index ["reset_password_token"], name: "index_admins_on_reset_password_token", unique: true
+  end
+
+  create_table "author_payment_details", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
+    t.uuid "author_id", null: false
+    t.string "account_name"
+    t.string "account_number"
+    t.string "bank_code"
+    t.string "recipient_code"
+    t.datetime "verified_at"
+    t.boolean "active", default: true
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["author_id"], name: "index_author_payment_details_on_author_id"
+    t.index ["recipient_code"], name: "index_author_payment_details_on_recipient_code", unique: true
+  end
+
+  create_table "author_revenues", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
+    t.uuid "author_id", null: false
+    t.uuid "purchase_id", null: false
+    t.decimal "amount", precision: 10, scale: 2, null: false
+    t.string "status", default: "pending", null: false
+    t.datetime "paid_at"
+    t.string "payment_batch_id"
+    t.string "payment_reference"
+    t.text "notes"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["author_id"], name: "index_author_revenues_on_author_id"
+    t.index ["paid_at"], name: "index_author_revenues_on_paid_at"
+    t.index ["payment_batch_id"], name: "index_author_revenues_on_payment_batch_id"
+    t.index ["purchase_id"], name: "index_author_revenues_on_purchase_id"
+    t.index ["status"], name: "index_author_revenues_on_status"
   end
 
   create_table "authors", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
@@ -154,6 +186,12 @@ ActiveRecord::Schema[7.1].define(version: 2025_06_03_155031) do
     t.string "transaction_reference"
     t.datetime "payment_verified_at"
     t.uuid "reader_id"
+    t.decimal "paystack_fee", precision: 10, scale: 2
+    t.decimal "delivery_fee", precision: 10, scale: 2
+    t.decimal "admin_revenue", precision: 10, scale: 2
+    t.decimal "author_revenue_amount", precision: 10, scale: 2
+    t.float "file_size_mb"
+    t.string "fee_data_source"
     t.index ["book_id"], name: "index_purchases_on_book_id"
     t.index ["reader_id", "book_id"], name: "index_purchases_on_reader_id_and_book_id"
     t.index ["reader_id"], name: "index_purchases_on_reader_id"
@@ -187,6 +225,9 @@ ActiveRecord::Schema[7.1].define(version: 2025_06_03_155031) do
 
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
+  add_foreign_key "author_payment_details", "authors"
+  add_foreign_key "author_revenues", "authors"
+  add_foreign_key "author_revenues", "purchases"
   add_foreign_key "books", "authors"
   add_foreign_key "chapters", "books"
   add_foreign_key "purchases", "books"

@@ -1,6 +1,7 @@
 class Book < ApplicationRecord
   before_create :generate_unique_ids
   before_validation :ensure_arrays_format
+  # before_save :check_price_size_ratio
 
   belongs_to :author
   has_many :purchases
@@ -73,6 +74,37 @@ class Book < ApplicationRecord
   #     strip: true,
   #     saver: { quality: 80 }
   #   ).processed.url
+  # end
+
+  # In Book model
+
+  # def check_price_size_ratio
+  #   return unless ebook.attached? || audiobook.attached?
+    
+  #   content_types = []
+  #   content_types << 'ebook' if ebook.attached?
+  #   content_types << 'audiobook' if audiobook.attached?
+    
+  #   content_types.each do |type|
+  #     attachment = type == 'ebook' ? ebook : audiobook
+  #     size_mb = (attachment.blob.byte_size.to_f / (1024 * 1024)).round(2)
+  #     price_field = type == 'ebook' ? :ebook_price : :audiobook_price
+  #     current_price = send(price_field)
+      
+  #     # Calculate minimum recommended price
+  #     min_price = RevenueCalculationService.calculate_minimum_recommended_price(size_mb)
+      
+  #     if current_price < min_price
+  #       # Set warning flag and store in JSON field (add this column to your model)
+  #       self.price_warnings ||= {}
+  #       self.price_warnings[type] = {
+  #         current_price: current_price/100.0,
+  #         recommended_price: min_price/100.0,
+  #         file_size_mb: size_mb,
+  #         estimated_earnings: RevenueCalculationService.estimate_author_earnings(current_price/100.0, size_mb)
+  #       }
+  #     end
+  #   end
   # end
 
   private

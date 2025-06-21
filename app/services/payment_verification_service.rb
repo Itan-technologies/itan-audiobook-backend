@@ -96,11 +96,27 @@ class PaymentVerificationService
   
   def complete_payment!(payment_data)
     Purchase.transaction do
+      # First mark the purchase as completed
       purchase.update!(
         purchase_status: 'completed',
         payment_verified_at: Time.current
       )
+      
+      # Calculate revenue distribution
+      calculation = RevenueCalculationService.new(purchase).calculate
+      
+      # Create author revenue record
+      AuthorRevenue.create!(
+        author: purchase.book.author,
+        purchase: purchase,
+        amount: purchase.author_revenue,
+        status: 'pending',
+        notes: "Sale of #{purchase.book.title} (#{purchase.content_type})"
+      )
     end
+    
+    Rails.logger.info "Payment completed and revenue calculated for purchase: #{purchase.id}"
+  end
     
     Rails.logger.info "Payment completed for purchase: #{purchase.id}"
   end

@@ -63,6 +63,25 @@ class PaystackService
     }
   end
 
+  def self.resolve_account(account_number, bank_code)
+    require 'uri'
+    require 'net/http'
+    
+    url = URI("https://api.paystack.co/bank/resolve?account_number=#{account_number}&bank_code=#{bank_code}")
+    
+    http = Net::HTTP.new(url.host, url.port)
+    http.use_ssl = true
+    
+    request = Net::HTTP::Get.new(url)
+    request["Authorization"] = "Bearer #{ENV['PAYSTACK_SECRET_KEY']}"
+    
+    response = http.request(request)
+    JSON.parse(response.body)
+    rescue => e
+    Rails.logger.error "PaystackService Error: #{e.message}"
+    { "status" => false, "message" => "Service unavailable" }
+  end
+
   private
 
   def handle_response(response)

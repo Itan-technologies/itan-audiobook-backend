@@ -15,6 +15,8 @@ class Author < ApplicationRecord
   # associations
   has_many :notifications
   has_many :books
+  has_many :author_revenues
+  has_many :purchases, through: :books
 
   # Active storage attachment
   has_one_attached :author_profile_image
@@ -97,6 +99,32 @@ class Author < ApplicationRecord
     Rails.logger.error "Profile image download failed: #{e.message}"
   ensure
     temp_file&.close if temp_file.respond_to?(:close)
+  end
+
+  def total_earnings
+    author_revenues.sum(:amount)
+  end
+  
+  def pending_earnings
+    author_revenues.pending.sum(:amount)
+  end
+  
+  def paid_earnings
+    author_revenues.approved.sum(:amount)
+  end
+  
+  def monthly_earnings(year = Date.current.year)
+    author_revenues
+      .where('extract(year from created_at) = ?', year)
+      .group("extract(month from created_at)")
+      .sum(:amount)
+  end
+  
+  def book_earnings
+    author_revenues
+      .joins(purchase: :book)
+      .group('books.id, books.title')
+      .sum(:amount)
   end
 
   private

@@ -82,7 +82,13 @@ class PurchaseService
       content_type: @content_type,
       purchase_status: 'pending',
       purchase_date: Time.current,
-      transaction_reference: reference
+      transaction_reference: reference,
+      paystack_fee: nil, 
+      delivery_fee: nil,
+      admin_revenue: nil,
+      author_revenue_amount: nil,
+      file_size_mb: nil,
+      fee_data_source: nil
     )
   end
 

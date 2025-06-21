@@ -29,7 +29,7 @@ Rails.application.routes.draw do
       end
 
       # Admin account management
-      resources :admins, only: [:index, :show, :create, :destroy]
+      resources :admins, only: [:index, :show, :create]
 
       # Admin functionality namespace
       namespace :admin do
@@ -40,6 +40,23 @@ Rails.application.routes.draw do
           end
         end
         resources :authors, only: [:index, :show]       
+      end
+
+      namespace :admin do
+        resources :author_revenues, only: [:index] do
+          collection do
+            post :process_payments
+          end
+        end
+
+        resources :analytics, only: [] do
+            collection do              
+              get :financial_summary
+            end
+        end
+        
+        # Optional: analytics dashboard routes
+        get 'revenue_dashboard', to: 'dashboard#revenue'
       end
 
       # Author account management    
@@ -57,6 +74,29 @@ Rails.application.routes.draw do
         end
       end
 
+      # Author-facing routes
+      namespace :author do
+        resources :earnings, only: [:index] do
+          collection do
+            get :by_book
+            # get :monthly
+          end
+        end
+        
+        # Individual payment historys
+        resources :payment_histories, only: [:index, :show]
+      end
+    
+      namespace :author do    
+        resource :banking_details, only: [:show, :update]        
+      end
+      
+      namespace :author do
+        resource :banking_details, only: [:show, :update] do
+          post :verify
+        end
+      end
+      
       namespace :readers do
         resource :profile, only: [:show, :update, :create]
       end
@@ -76,14 +116,14 @@ Rails.application.routes.draw do
       end
     
       # ✅ READER - Complete routes for DRM protected reading
-      resources :reader, only: [:show] do
-        member do
-          get :metadata      # GET /api/v1/reader/:id/metadata?token=...
-          get :page         # GET /api/v1/reader/:id/page?page=1&token=...
-          # post :refresh_reading_token
-          # get :audio_chunk  # GET /api/v1/reader/:id/audio_chunk?start=120&token=...
-        end
-      end
+      # resources :reader, only: [:show] do
+      #   member do
+      #     get :metadata      # GET /api/v1/reader/:id/metadata?token=...
+      #     get :page         # GET /api/v1/reader/:id/page?page=1&token=...
+      #     # post :refresh_reading_token
+      #     # get :audio_chunk  # GET /api/v1/reader/:id/audio_chunk?start=120&token=...
+      #   end
+      # end
       
       resource :direct_uploads, only: [:create]
     end

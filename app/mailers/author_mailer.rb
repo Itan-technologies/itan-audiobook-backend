@@ -18,4 +18,16 @@ class AuthorMailer < Devise::Mailer
     @code = code
     mail(to: author.email, subject: 'Your Login Verification Code')
   end
+
+  def payment_processed(author, amount, sale_count)
+    @author = author
+    @amount = amount
+    @sale_count = sale_count
+    @date = Time.current
+    
+    mail(
+      to: @author.email,
+      subject: "Your payment of $#{amount} has been processed"
+    )
+  end
 end
