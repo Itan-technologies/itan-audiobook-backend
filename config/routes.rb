@@ -78,7 +78,7 @@ Rails.application.routes.draw do
       namespace :author do
         resources :earnings, only: [:index] do
           collection do
-            get :by_book
+            # get :by_book
             # get :monthly
           end
         end
@@ -86,17 +86,14 @@ Rails.application.routes.draw do
         # Individual payment historys
         resources :payment_histories, only: [:index, :show]
       end
-    
-      namespace :author do    
-        resource :banking_details, only: [:show, :update]        
-      end
-      
+        
       namespace :author do
         resource :banking_details, only: [:show, :update] do
           post :verify
+          get :banks
         end
       end
-      
+
       namespace :readers do
         resource :profile, only: [:show, :update, :create]
       end
