@@ -115,10 +115,19 @@ class Author < ApplicationRecord
   end
   
   def monthly_earnings(year = Date.current.year)
-    author_revenues
+    result = {}
+    
+    raw_data = author_revenues
       .where('extract(year from created_at) = ?', year)
       .group("extract(month from created_at)")
       .sum(:amount)
+      
+    raw_data.each do |month_num, amount|
+      month_name = Date::MONTHNAMES[month_num.to_i]
+      result[month_name] = amount
+    end
+    
+    result
   end
   
   def book_earnings
