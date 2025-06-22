@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2025_06_20_160428) do
+ActiveRecord::Schema[7.1].define(version: 2025_06_21_010736) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pgcrypto"
   enable_extension "plpgsql"
@@ -55,7 +55,7 @@ ActiveRecord::Schema[7.1].define(version: 2025_06_20_160428) do
     t.index ["reset_password_token"], name: "index_admins_on_reset_password_token", unique: true
   end
 
-  create_table "author_payment_details", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
+  create_table "author_banking_details", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
     t.uuid "author_id", null: false
     t.string "account_name"
     t.string "account_number"
@@ -65,8 +65,9 @@ ActiveRecord::Schema[7.1].define(version: 2025_06_20_160428) do
     t.boolean "active", default: true
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
-    t.index ["author_id"], name: "index_author_payment_details_on_author_id"
-    t.index ["recipient_code"], name: "index_author_payment_details_on_recipient_code", unique: true
+    t.string "resolved_account_name"
+    t.index ["author_id"], name: "index_author_banking_details_on_author_id"
+    t.index ["recipient_code"], name: "index_author_banking_details_on_recipient_code", unique: true
   end
 
   create_table "author_revenues", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
@@ -225,7 +226,7 @@ ActiveRecord::Schema[7.1].define(version: 2025_06_20_160428) do
 
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
-  add_foreign_key "author_payment_details", "authors"
+  add_foreign_key "author_banking_details", "authors"
   add_foreign_key "author_revenues", "authors"
   add_foreign_key "author_revenues", "purchases"
   add_foreign_key "books", "authors"
