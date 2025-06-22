@@ -17,6 +17,7 @@ class Author < ApplicationRecord
   has_many :books
   has_many :author_revenues
   has_many :purchases, through: :books
+  has_one :author_banking_detail, dependent: :destroy
 
   # Active storage attachment
   has_one_attached :author_profile_image
