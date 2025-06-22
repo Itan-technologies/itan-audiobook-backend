@@ -50,12 +50,12 @@ class Api::V1::Author::EarningsController <  ApplicationController
       }
     end
 
-    def by_book
-      book_earnings = current_author.author_revenues
-                                   .joins(purchase: :book)
-                                   .group('books.id, books.title')
-                                   .sum(:amount)
+    # def by_book
+    #   book_earnings = current_author.author_revenues
+    #                                .joins(purchase: :book)
+    #                                .group('books.id, books.title')
+    #                                .sum(:amount)
                                    
-      render json: { book_earnings: book_earnings }
-    end
+    #   render json: { book_earnings: book_earnings }
+    # end
 end
