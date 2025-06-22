@@ -82,6 +82,25 @@ class PaystackService
     { "status" => false, "message" => "Service unavailable" }
   end
 
+  def self.list_banks
+    require 'uri'
+    require 'net/http'
+    
+    url = URI("https://api.paystack.co/bank")
+    
+    http = Net::HTTP.new(url.host, url.port)
+    http.use_ssl = true
+    
+    request = Net::HTTP::Get.new(url)
+    request["Authorization"] = "Bearer #{ENV['PAYSTACK_SECRET_KEY']}"
+    
+    response = http.request(request)
+    JSON.parse(response.body)
+    rescue => e
+      Rails.logger.error "PaystackService Error (list_banks): #{e.message}"
+      { "status" => false, "message" => "Service unavailable" }
+  end
+
   private
 
   def handle_response(response)
