@@ -110,7 +110,7 @@ class Author < ApplicationRecord
     author_revenues.pending.sum(:amount)
   end
   
-  def paid_earnings
+  def approved_earnings
     author_revenues.approved.sum(:amount)
   end
   
@@ -137,6 +137,11 @@ class Author < ApplicationRecord
       .sum(:amount)
   end
 
+  def next_payment_date
+    # Calculate next payment date (end of current month + 30 days)
+    (Date.today.end_of_month + 30.days).strftime("%B %d, %Y")
+  end
+  
   private
 
   def send_code_via_email(code)
