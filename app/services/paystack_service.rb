@@ -40,6 +40,36 @@ class PaystackService
     result
   end
 
+  def initiate_transfer(recipient_code, amount, reference = nil, reason = nil)
+    reference ||= "TFR_#{SecureRandom.hex(8)}"
+    
+    body = {
+      source: "balance",
+      amount: (amount * 100).to_i,  # Convert to kobo/cents
+      recipient: recipient_code,
+      reference: reference
+    }
+    
+    body[:reason] = reason if reason
+    
+    response = self.class.post(
+      '/transfer',
+      headers: @headers,
+      body: body.to_json
+    )
+    
+    handle_response(response)
+  end
+
+  def verify_transfer(reference)
+    response = self.class.get(
+      "/transfer/verify/#{reference}",
+      headers: @headers
+    )
+    
+    handle_response(response)
+  end
+
   def verify_transaction(reference)
     response = self.class.get("/transaction/verify/#{reference}", {
       headers: @headers
@@ -99,6 +129,22 @@ class PaystackService
     rescue => e
       Rails.logger.error "PaystackService Error (list_banks): #{e.message}"
       { "status" => false, "message" => "Service unavailable" }
+  end
+
+  def create_transfer_recipient(name:, account_number:, bank_code:)
+    body = {
+      type: "nuban",
+      name: name,
+      account_number: account_number,
+      bank_code: bank_code,
+      currency: "NGN"
+    }
+    response = self.class.post(
+      '/transferrecipient',
+      headers: @headers,
+      body: body.to_json
+    )
+    handle_response(response)
   end
 
   private
