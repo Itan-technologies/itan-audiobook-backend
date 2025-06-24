@@ -39,6 +39,10 @@ gem 'omniauth-rails_csrf_protection' # Prevents CSRF attacks
 
 gem 'down'
 
+gem 'kaminari'
+
+gem 'business_time'
+
 # Bundle edge Rails instead: gem "rails", github: "rails/rails", branch: "main"
 gem 'rails', '~> 7.1.5', '>= 7.1.5.1'
 
