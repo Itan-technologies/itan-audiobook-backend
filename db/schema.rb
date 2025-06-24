@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2025_06_21_010736) do
+ActiveRecord::Schema[7.1].define(version: 2025_06_22_060253) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pgcrypto"
   enable_extension "plpgsql"
@@ -81,6 +81,9 @@ ActiveRecord::Schema[7.1].define(version: 2025_06_21_010736) do
     t.text "notes"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.string "transfer_reference"
+    t.datetime "transferred_at"
+    t.string "transfer_status"
     t.index ["author_id"], name: "index_author_revenues_on_author_id"
     t.index ["paid_at"], name: "index_author_revenues_on_paid_at"
     t.index ["payment_batch_id"], name: "index_author_revenues_on_payment_batch_id"
