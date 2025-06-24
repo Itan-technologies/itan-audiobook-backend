@@ -1,8 +1,16 @@
-<h1>Payment Processed</h1>
+<h1>Payment Approved</h1>
 <p>Hello <%= @author.first_name %>,</p>
-<p>We're pleased to inform you that we've processed a payment of <strong>$<%= sprintf('%.2f', @amount) %></strong> to your account for <%= @sale_count %> book sales.</p>
-<p>This payment covers all sales finalized through <%= @date.strftime('%B %d, %Y') %>.</p>
-<p>You can view your complete sales history and payment details by logging into your author dashboard.</p>
-<p>Thank you for being part of the Itan Audiobooks family!</p>
+<p>We're pleased to inform you that we've <strong>approved a payment of $<%= sprintf('%.2f', @amount) %></strong> for <%= @sale_count %> book sales as part of our monthly payment processing.</p>
+<p>This payment covers sales finalized through <%= @payment_date.strftime('%B %d, %Y') %>.</p>
+<p><strong>Payment Details:</strong></p>
+<ul>
+  <li>Amount: $<%= sprintf('%.2f', @amount) %></li>
+  <li>Reference: <%= @payment_reference %></li>
+  <li>Status: Approved for payment</li>
+  <li>Eligible for bank transfer on: <%= @estimated_transfer_date %></li>
+</ul>
+<p>According to our payment policy, funds will be transferred to your bank account 30 days after approval.</p>
+<p>You can track the status of this payment in your author dashboard</p>
+<p>Thank you for being part of the Itan Ebooks family!</p>
 <p>Best regards,<br>
   The Itan Audiobooks Team</p>

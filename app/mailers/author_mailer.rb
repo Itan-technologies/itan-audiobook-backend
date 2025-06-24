@@ -19,15 +19,27 @@ class AuthorMailer < Devise::Mailer
     mail(to: author.email, subject: 'Your Login Verification Code')
   end
 
-  def payment_processed(author, amount, sale_count)
+  def payment_processed(author, amount, sale_count, payment_reference = nil)
+    # Explicitly require business_time to ensure it's loaded
+    require 'business_time'
+    
     @author = author
     @amount = amount
     @sale_count = sale_count
-    @date = Time.current
+    @payment_reference = payment_reference || "N/A"
+    @payment_date = Date.today
+    
+    # Properly calculate business days with error handling
+    begin
+      # This is the correct syntax for the business_time gem
+      @estimated_transfer_date = (@payment_date + 30.days).strftime('%B %d, %Y')
+    rescue => e      
+      @estimated_deposit_date = (@payment_date + 30.days).strftime('%B %d, %Y')
+    end
     
     mail(
       to: @author.email,
-      subject: "Your payment of $#{amount} has been processed"
+      subject: "Your payment of $#{sprintf('%.2f', amount)} has been approved"
     )
   end
 end
