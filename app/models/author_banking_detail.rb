@@ -44,35 +44,36 @@ class AuthorBankingDetail < ApplicationRecord
 
     def verify_account!
       return false unless account_number.present? && bank_code.present?
-      
-      # DEVELOPMENT MODE BYPASS - ESSENTIAL FOR TESTING
-      if Rails.env.development? || Rails.env.test?
-        Rails.logger.info "⚠️ DEVELOPMENT MODE: Using mock verification"
-        
-        # Mock successful verification
-        self.resolved_account_name = "TEST ACCOUNT: #{account_name || 'Author Name'}"
-        self.verified_at = Time.current
-        self.recipient_code = "DEV_RCP_#{SecureRandom.hex(6)}"
-        self.save
-        return true
-      end
-
+    
       begin
         Rails.logger.info "Starting account verification with Paystack: #{account_number}, #{bank_code}"
         response = PaystackService.resolve_account(account_number, bank_code)
         Rails.logger.info "Paystack Response: #{response.inspect}"
-        
+    
         if response["status"] == true
-          # Success path
+          # Success path: resolve account succeeded
           self.resolved_account_name = response["data"]["account_name"]
           self.verified_at = Time.current
-          self.save
-          return true
+    
+          # Now create transfer recipient with Paystack
+          recipient_result = PaystackService.new.create_transfer_recipient(
+            name: self.resolved_account_name,
+            account_number: self.account_number,
+            bank_code: self.bank_code
+          )
+          if recipient_result[:success]
+            self.recipient_code = recipient_result[:data]["recipient_code"]
+            self.save
+            return true
+          else
+            errors.add(:base, "Failed to create transfer recipient: #{recipient_result[:error]}")
+            return false
+          end
         else
           # Failed path - add the specific error message from Paystack
           error_message = response["message"] || "Unknown error"
           Rails.logger.error "Paystack verification failed: #{error_message}"
-          
+    
           # Provide more specific error messages based on the error code
           case response["code"]
           when "invalid_bank_code"
