@@ -43,9 +43,10 @@ Rails.application.routes.draw do
       end
 
       namespace :admin do
-        resources :author_revenues, only: [:index] do
+        resources :author_revenues, only: [:index, :show] do
           collection do
             post :process_payments
+            post :transfer_funds
           end
         end
 
@@ -76,10 +77,12 @@ Rails.application.routes.draw do
 
       # Author-facing routes
       namespace :author do
-        resources :earnings, only: [:index] do
+        resources :earnings, only: [] do
           collection do
-            # get :by_book
-            # get :monthly
+            get :summary
+            get :breakdowns
+            get :recent_sales
+            get :approved_payments
           end
         end
         

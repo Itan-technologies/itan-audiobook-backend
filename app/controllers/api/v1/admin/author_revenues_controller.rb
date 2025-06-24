@@ -200,7 +200,7 @@ class Api::V1::Admin::AuthorRevenuesController < ApplicationController
     # Check if payments in this batch are ready for transfer
     earliest_approval = batch_payments.minimum(:paid_at)
     
-    # Check if 30 days have passed since approval
+    Check if 30 days have passed since approval
     if earliest_approval && earliest_approval > 30.days.ago
       days_remaining = (earliest_approval + 30.days - Time.current).to_i / 1.day
       render json: { 

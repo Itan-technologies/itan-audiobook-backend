@@ -3,14 +3,15 @@ class AuthorRevenue < ApplicationRecord
     belongs_to :purchase
     
     validates :amount, presence: true, numericality: { greater_than_or_equal_to: 0 }
-    validates :status, presence: true, inclusion: { in: %w[pending processing approved] }
+    validates :status, presence: true, inclusion: { in: %w[pending processing finalized approved transferred] }
     
     scope :pending, -> { where(status: 'pending') }
     scope :processing, -> { where(status: 'processing') }
     scope :approved, -> { where(status: 'approved') }
+    scope :transferred, -> { where(status: 'transferred') }
     
     # Find revenues eligible for payout (pending, above minimum threshold)
-    scope :payable, -> { pending.where('amount >= ?', 5.0) }
+    # scope :payable, -> { pending.where('amount >= ?', 5.0) }
     
     # Group pending revenues by author for batch processing
     scope :by_author, -> { group(:author_id).sum(:amount) }
@@ -19,6 +20,12 @@ class AuthorRevenue < ApplicationRecord
     scope :monthly_totals, -> { 
       group("DATE_TRUNC('month', created_at)").sum(:amount) 
     }
+
+    # scope :ready_for_approval, -> { 
+    #   pending
+    #     .where('created_at < ?', 30.days.ago)
+    #     .where('amount >= ?', 5.0)            
+    # }
     
     def mark_as_approved!(payment_ref = nil, batch_id = nil)
       update!(
@@ -28,4 +35,16 @@ class AuthorRevenue < ApplicationRecord
         payment_batch_id: batch_id
       )
     end
+
+    def mark_as_transferred!(transfer_ref = nil)
+      update!(
+        status: 'transferred',
+        transferred_at: Time.current,
+        transfer_reference: transfer_ref
+      )
+    end
+
+    # def self.finalize_eligible_sales
+    #   pending.where('created_at < ?', 14.days.ago).update_all(status: 'finalized')
+    # end
 end
