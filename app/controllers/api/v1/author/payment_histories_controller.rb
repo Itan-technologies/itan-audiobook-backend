@@ -1,7 +1,6 @@
 class Api::V1::Author::PaymentHistoriesController < ApplicationController
   before_action :authenticate_author!
   
-    # app/controllers/api/v1/author/payment_histories_controller.rb
     def index
       payments_data = current_author.author_revenues
                               .where(status: ['approved', 'transferred'])
