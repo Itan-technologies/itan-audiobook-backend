@@ -22,5 +22,5 @@ class Api::V1::Admin::AnalyticsController < ApplicationController
         breakdown_by_day: purchases.group_by_day(:created_at).sum(:amount)
                               .transform_values { |amount| amount / 100.0 }
       }
-    end
+  end
 end
