@@ -47,6 +47,7 @@ Rails.application.routes.draw do
           collection do
             post :process_payments
             post :transfer_funds
+            get :processed_batches
           end
         end
 

@@ -28,7 +28,7 @@ class AuthorBankingDetail < ApplicationRecord
       "XXXX#{account_number.last(4)}"
     end
     
-    # For serialization/display - don't expose full account numbers
+    # For serialization/display
     def as_json(options = {})
       super(options).tap do |json|
         if json["account_number"].present?
