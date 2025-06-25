@@ -38,6 +38,37 @@ class Api::V1::Admin::AuthorRevenuesController < ApplicationController
     }
   end
 
+  # Add this action to your Api::V1::Admin::AuthorRevenuesController
+  def processed_batches
+    processed_batches = AuthorRevenue.where(status: 'approved')
+                                     .group(:payment_batch_id)
+                                     .select('payment_batch_id, SUM(amount) as total_amount, COUNT(*) as items_count, MIN(paid_at) as approved_date')
+                                     .order('approved_date DESC')
+                                     .page(params[:page]).per(20)
+  
+    render json: {
+      processed_batches: processed_batches.map { |batch|
+        # Get all unique authors for this batch
+        authors = Author.joins(:author_revenues)
+                        .where(author_revenues: { payment_batch_id: batch.payment_batch_id })
+                        .distinct
+  
+        {
+          batch_id: batch.payment_batch_id,
+          total_amount: batch.total_amount,
+          items_count: batch.items_count,
+          approved_date: batch.approved_date&.iso8601,
+          authors: authors.map { |a| { id: a.id, name: "#{a.first_name} #{a.last_name}", email: a.email } }
+        }
+      },
+      pagination: {
+        total_pages: processed_batches.total_pages,
+        current_page: processed_batches.current_page,
+        total_count: processed_batches.total_count
+      }
+    }
+  end
+
   # GET /api/v1/admin/author_revenues/:author_id
   def show
     @author = Author.find(params[:id])
@@ -200,16 +231,15 @@ class Api::V1::Admin::AuthorRevenuesController < ApplicationController
     # Check if payments in this batch are ready for transfer
     earliest_approval = batch_payments.minimum(:paid_at)
     
-    Check if 30 days have passed since approval
-    if earliest_approval && earliest_approval > 30.days.ago
-      days_remaining = (earliest_approval + 30.days - Time.current).to_i / 1.day
-      render json: { 
-        error: "Payments not yet eligible for transfer", 
-        eligible_date: (earliest_approval + 30.days).strftime('%Y-%m-%d'),
-        days_remaining: days_remaining
-      }, status: :unprocessable_entity
-      return
-    end
+    # if earliest_approval && earliest_approval > 30.days.ago
+    #   days_remaining = (earliest_approval + 30.days - Time.current).to_i / 1.day
+    #   render json: { 
+    #     error: "Payments not yet eligible for transfer", 
+    #     eligible_date: (earliest_approval + 30.days).strftime('%Y-%m-%d'),
+    #     days_remaining: days_remaining
+    #   }, status: :unprocessable_entity
+    #   return
+    # end
     
     results = TransferProcessor.process_batch(batch_id)
     
