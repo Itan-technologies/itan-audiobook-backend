@@ -38,9 +38,13 @@ class Api::V1::Admin::AuthorRevenuesController < ApplicationController
     }
   end
 
-  # Add this action to your Api::V1::Admin::AuthorRevenuesController
   def processed_batches
+    # Get all batch IDs that have at least one transferred record
+    transferred_batch_ids = AuthorRevenue.where(status: 'transferred').distinct.pluck(:payment_batch_id)
+  
+    # Get only batches that have approved records and are NOT in transferred batches
     processed_batches = AuthorRevenue.where(status: 'approved')
+                                     .where.not(payment_batch_id: transferred_batch_ids)
                                      .group(:payment_batch_id)
                                      .select('payment_batch_id, SUM(amount) as total_amount, COUNT(*) as items_count, MIN(paid_at) as approved_date')
                                      .order('approved_date DESC')
@@ -48,7 +52,6 @@ class Api::V1::Admin::AuthorRevenuesController < ApplicationController
   
     render json: {
       processed_batches: processed_batches.map { |batch|
-        # Get all unique authors for this batch
         authors = Author.joins(:author_revenues)
                         .where(author_revenues: { payment_batch_id: batch.payment_batch_id })
                         .distinct
@@ -126,7 +129,7 @@ class Api::V1::Admin::AuthorRevenuesController < ApplicationController
     end
 
     author_ids = params[:author_ids] || []
-    min_payment_threshold = ENV.fetch('MIN_PAYMENT_THRESHOLD', 5.0).to_f
+    min_payment_threshold = ENV.fetch('MIN_PAYMENT_THRESHOLD', 10.0).to_f
     processed_authors = []
     skipped_authors = []
     
@@ -231,23 +234,46 @@ class Api::V1::Admin::AuthorRevenuesController < ApplicationController
     # Check if payments in this batch are ready for transfer
     earliest_approval = batch_payments.minimum(:paid_at)
     
-    # if earliest_approval && earliest_approval > 30.days.ago
-    #   days_remaining = (earliest_approval + 30.days - Time.current).to_i / 1.day
-    #   render json: { 
-    #     error: "Payments not yet eligible for transfer", 
-    #     eligible_date: (earliest_approval + 30.days).strftime('%Y-%m-%d'),
-    #     days_remaining: days_remaining
-    #   }, status: :unprocessable_entity
-    #   return
-    # end
+    if earliest_approval && earliest_approval > 30.days.ago
+      days_remaining = (earliest_approval + 30.days - Time.current).to_i / 1.day
+      render json: { 
+        error: "Payments not yet eligible for transfer", 
+        eligible_date: (earliest_approval + 30.days).strftime('%Y-%m-%d'),
+        days_remaining: days_remaining
+      }, status: :unprocessable_entity
+      return
+    end
     
     results = TransferProcessor.process_batch(batch_id)
     
-    render json: {
-      success: true,
-      transferred: results[:success],
-      failed: results[:failed]
-    }
+    if results[:success].empty? && results[:failed].empty?
+      render json: { success: true, message: "No approved payments found for this batch. Nothing to transfer." }
+    else
+      render json: {
+        success: true,
+        transfer_successful: results[:success],
+        transfer_failed: results[:failed]
+      }
+    end
+  end
+
+  def transferred_authors
+    transferred = AuthorRevenue.where(status: 'transferred')
+                               .group(:author_id)
+                               .select('author_id, SUM(amount) as total_transferred, COUNT(*) as transfer_count')
+  
+    result = transferred.map do |record|
+      author = Author.find(record.author_id)
+      {
+        author_id: record.author_id,
+        author_name: "#{author.first_name} #{author.last_name}",
+        email: author.email,
+        total_transferred: record.total_transferred,
+        transfer_count: record.transfer_count
+      }
+    end
+  
+    render json: { transferred_authors: result }
   end
 
   private
@@ -263,5 +289,11 @@ class Api::V1::Admin::AuthorRevenuesController < ApplicationController
     else
       0
     end.round(2)
+  end
+
+  def authenticate_admin!
+    unless current_admin
+      render json: { error: "Unauthorized" }, status: :unauthorized
+    end
   end
 end
