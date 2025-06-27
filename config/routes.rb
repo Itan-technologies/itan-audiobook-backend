@@ -48,6 +48,7 @@ Rails.application.routes.draw do
             post :process_payments
             post :transfer_funds
             get :processed_batches
+            get :transferred_authors
           end
         end
 
