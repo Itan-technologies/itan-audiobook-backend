@@ -23,4 +23,12 @@ class Api::V1::Admin::AnalyticsController < ApplicationController
                               .transform_values { |amount| amount / 100.0 }
       }
   end
+
+  private
+  
+  def authenticate_admin!
+    unless current_admin
+      render json: { error: "Unauthorized" }, status: :unauthorized
+    end
+  end
 end
