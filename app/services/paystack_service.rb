@@ -40,13 +40,14 @@ class PaystackService
     result
   end
 
-  def initiate_transfer(recipient_code, amount, reference = nil, reason = nil)
+  def initiate_transfer(recipient_code, amount_in_kobo, reference = nil, reason = nil)
     reference ||= "TFR_#{SecureRandom.hex(8)}"
     
     body = {
       source: "balance",
-      amount: (amount * 100).to_i,  # Convert to kobo/cents
+      amount: amount_in_kobo,
       recipient: recipient_code,
+      currency: "NGN",
       reference: reference
     }
     
