@@ -23,16 +23,12 @@ class Api::V1::PurchasesController < ApplicationController
   # Verify payment after Paystack callback
   def verify
     Rails.logger.info "============ PAYSTACK WEBHOOK RECEIVED ============"
-    Rails.logger.info "Headers: #{request.headers.to_h.select { |k,v| k.to_s.downcase.include?('x-') }.inspect}"
-    Rails.logger.info "Params: #{params.inspect}"
-    Rails.logger.info "Raw Body: #{request.raw_post.truncate(100)}" # Truncate for security
   
     # Extract reference from the correct location
     reference = params[:data][:reference]
     
     # 1. CRITICAL: Verify webhook signature first
-    unless verify_webhook_signature
-      Rails.logger.error "Invalid webhook signature for reference: #{reference}"
+    unless verify_webhook_signature      
       return render json: { 
         status: { code: 401, message: 'Unauthorized webhook' } 
       }, status: :unauthorized
@@ -41,16 +37,14 @@ class Api::V1::PurchasesController < ApplicationController
     # 2. Find purchase directly without using current_reader
     purchase = Purchase.find_by(transaction_reference: reference)
     
-    if purchase.nil?
-      Rails.logger.error "Purchase not found for reference: #{reference}"
+    if purchase.nil?      
       return render json: {
         status: { code: 404, message: 'Purchase not found' }
       }, status: :not_found
     end
     
     # 3. Update purchase status directly - IMPORTANT: No validation checks
-    if purchase.update(purchase_status: 'completed')
-      Rails.logger.info "✅ Purchase #{purchase.id} marked as completed"
+    if purchase.update(purchase_status: 'completed')      
       RevenueCalculationService.new(purchase).calculate
       render json: {
         status: { code: 200, message: 'Payment verified successfully' },
@@ -162,9 +156,6 @@ class Api::V1::PurchasesController < ApplicationController
   def authenticate_reader!
     token = request.headers['Authorization']&.split(' ')&.last
     
-    Rails.logger.info "Authorization header: #{request.headers['Authorization']}"
-    Rails.logger.info "Extracted token: #{token&.truncate(50)}"
-    
     unless token
       Rails.logger.error "No token provided"
       return render json: {
@@ -173,8 +164,7 @@ class Api::V1::PurchasesController < ApplicationController
     end
   
     begin
-      Rails.logger.info "JWT Secret exists: #{ENV['DEVISE_JWT_SECRET_KEY'].present?}"
-      
+        
       decoded_token = JWT.decode(
         token, 
         ENV['DEVISE_JWT_SECRET_KEY'],
@@ -253,9 +243,6 @@ class Api::V1::PurchasesController < ApplicationController
     
     # Add debug logging
     Rails.logger.debug "Webhook received for verification"
-    Rails.logger.debug "Headers: #{request.headers.to_h.select { |k, v| k.start_with?('HTTP_X') }.inspect}"
-    Rails.logger.debug "Signature present: #{signature.present?}"
-    Rails.logger.debug "Payload length: #{payload&.length || 0}"
     
     return false unless signature.present? && payload.present?
     
