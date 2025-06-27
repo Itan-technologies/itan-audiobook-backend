@@ -2,8 +2,17 @@ class Api::V1::Author::BankingDetailsController < ApplicationController
   before_action :authenticate_author!
 
   def show
-    banking_detail = current_author.author_banking_detail || {}
-    render json: banking_detail
+    banking_detail = current_author.author_banking_detail
+  
+    # Find the latest batch_id for this author (if any)
+    latest_batch_id = AuthorRevenue.where(author_id: current_author.id)
+                                   .where.not(payment_batch_id: nil)
+                                   .order(paid_at: :desc)
+                                   .limit(1)
+                                   .pluck(:payment_batch_id)
+                                   .first
+  
+    render json: (banking_detail ? banking_detail.as_json.merge(batch_id: latest_batch_id) : {})
   end
 
   def update
