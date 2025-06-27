@@ -56,4 +56,11 @@ class Api::V1::Author::EarningsController <  ApplicationController
       }}
     }
   end
+
+  def authenticate_author!
+    unless current_author
+      render json: { error: "Unauthorized" }, status: :unauthorized
+      return
+    end
+  end
 end

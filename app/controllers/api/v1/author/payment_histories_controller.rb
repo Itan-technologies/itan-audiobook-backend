@@ -42,4 +42,11 @@ class Api::V1::Author::PaymentHistoriesController < ApplicationController
                                      
       render json: { payment_details: @payment_details }
     end
+
+    def authenticate_author!
+      unless current_author
+        render json: { error: "Unauthorized" }, status: :unauthorized
+        return
+      end
+    end
   end

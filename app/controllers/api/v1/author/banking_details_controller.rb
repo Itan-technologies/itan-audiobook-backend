@@ -71,4 +71,11 @@ class Api::V1::Author::BankingDetailsController < ApplicationController
     params.require(:banking_detail).permit(:bank_name, :account_number, :account_name, 
                                           :bank_code, :swift_code, :routing_number, :currency)
   end
+
+  def authenticate_author!
+    unless current_author
+      render json: { error: "Unauthorized" }, status: :unauthorized
+      return
+    end
+  end
 end
