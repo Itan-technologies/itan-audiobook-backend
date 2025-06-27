@@ -112,4 +112,10 @@ class Api::V1::Admin::BooksController < ApplicationController
         @book.tags = @book.tags.split(',').map(&:strip)
       end
     end
+
+    def authenticate_admin!
+      unless current_admin
+        render json: { error: "Unauthorized" }, status: :unauthorized
+      end
+    end
   end
