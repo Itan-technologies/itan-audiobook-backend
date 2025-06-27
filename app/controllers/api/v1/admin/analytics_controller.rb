@@ -29,6 +29,7 @@ class Api::V1::Admin::AnalyticsController < ApplicationController
   def authenticate_admin!
     unless current_admin
       render json: { error: "Unauthorized" }, status: :unauthorized
+      return
     end
   end
 end
