@@ -105,31 +105,31 @@ class Author < ApplicationRecord
   def total_earnings
     author_revenues.sum(:amount)
   end
-  
+
   def pending_earnings
     author_revenues.pending.sum(:amount)
   end
-  
+
   def approved_earnings
     author_revenues.approved.sum(:amount)
   end
-  
+
   def monthly_earnings(year = Date.current.year)
     result = {}
-    
+
     raw_data = author_revenues
       .where('extract(year from created_at) = ?', year)
-      .group("extract(month from created_at)")
+      .group('extract(month from created_at)')
       .sum(:amount)
-      
+
     raw_data.each do |month_num, amount|
       month_name = Date::MONTHNAMES[month_num.to_i]
       result[month_name] = amount
     end
-    
+
     result
   end
-  
+
   def book_earnings
     author_revenues
       .joins(purchase: :book)
@@ -139,9 +139,9 @@ class Author < ApplicationRecord
 
   def next_payment_date
     # Calculate next payment date (end of current month + 30 days)
-    (Date.today.end_of_month + 30.days).strftime("%B %d, %Y")
+    (Date.today.end_of_month + 30.days).strftime('%B %d, %Y')
   end
-  
+
   private
 
   def send_code_via_email(code)
