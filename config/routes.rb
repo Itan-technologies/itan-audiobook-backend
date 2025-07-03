@@ -24,7 +24,8 @@ Rails.application.routes.draw do
     namespace :v1 do
       resources :books do
         collection do
-          get :my_books          
+          get :my_books    
+          get :categories      
         end
       end
 
