@@ -13,10 +13,10 @@ class Purchase < ApplicationRecord
   validates :purchase_status, presence: true
   validates :purchase_date, presence: true
   validates :transaction_reference, presence: true, uniqueness: true
-  validates :reader_id, uniqueness: { 
-    scope: [:book_id, :content_type], 
+  validates :reader_id, uniqueness: {
+    scope: %i[book_id content_type],
     conditions: -> { where(purchase_status: 'completed') },
-    message: "You already own this book"
+    message: 'You already own this book'
   }
 
   # Scopes for common queries
@@ -34,7 +34,7 @@ class Purchase < ApplicationRecord
   end
 
   # Helper methods
- def can_be_downloaded?
+  def can_be_downloaded?
     completed? && payment_verified_at.present?
   end
 

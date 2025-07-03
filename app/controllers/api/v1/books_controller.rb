@@ -1,7 +1,7 @@
 class Api::V1::BooksController < ApplicationController
   # Load the book resource
   before_action :set_book, only: %i[show update destroy]
-  
+
   # Author-specific actions
   before_action :authenticate_author!, only: %i[create update destroy my_books]
   before_action :authorize_author!, only: %i[update destroy]
@@ -17,8 +17,8 @@ class Api::V1::BooksController < ApplicationController
   def index
     # Show only approved books to everyone
     @books = Book.includes(cover_image_attachment: :blob)
-              .where(approval_status: 'approved')
-              .order(created_at: :desc)
+      .where(approval_status: 'approved')
+      .order(created_at: :desc)
 
     render_books_json(@books)
   end
@@ -37,7 +37,7 @@ class Api::V1::BooksController < ApplicationController
   # POST /api/v1/books
 
   def create
-    @book = current_author.books.new(book_params)    
+    @book = current_author.books.new(book_params)
     begin
       if create_book_with_attachments
         render_success_response(@book, 'Book created successfully.')
@@ -52,7 +52,7 @@ class Api::V1::BooksController < ApplicationController
   end
 
   # PUT/PATCH /api/v1/books/:id
-  def update    
+  def update
     if @book.update(book_params)
       render json: {
         status: { code: 200, message: 'Book updated successfully.' },
@@ -76,60 +76,56 @@ class Api::V1::BooksController < ApplicationController
 
   def content
     # Get reading token from Authorization header
-    token = request.headers['Authorization']&.split(' ')&.last
-    
-    unless token
-      return render json: { error: 'Reading token required' }, status: :unauthorized
-    end
-    
+    token = request.headers['Authorization']&.split&.last
+
+    return render json: { error: 'Reading token required' }, status: :unauthorized unless token
+
     begin
       # Decode and verify token
-      payload = JWT.decode(token, ENV['DEVISE_JWT_SECRET_KEY'], true, { algorithm: 'HS256' })[0]
-      
+      payload = JWT.decode(token, ENV.fetch('DEVISE_JWT_SECRET_KEY', nil), true, { algorithm: 'HS256' })[0]
+
       # Check if token is for requested book and not expired
       if payload['book_id'] != params[:id] || Time.at(payload['exp']) < Time.current
         return render json: { error: 'Invalid or expired token' }, status: :forbidden
       end
-      
+
       # Serve different content based on type
       book = Book.find(params[:id])
       content_type = payload['content_type']
-      
+
       if content_type == 'ebook'
         # For ebooks: Return file URL or relevant data
         if book.ebook_file.attached?
           # Generate a temporary URL for the file
           url = Rails.application.routes.url_helpers.rails_blob_url(book.ebook_file, only_path: false)
-          
+
           render json: {
             title: book.title,
             url: url,
-            format: book.ebook_file.content_type || "application/pdf"
+            format: book.ebook_file.content_type || 'application/pdf'
           }
         else
           render json: {
             title: book.title,
-            error: "Book content not available",
-            format: "unknown"
+            error: 'Book content not available',
+            format: 'unknown'
           }, status: :not_found
         end
-      else
+      elsif book.audiobook_file.attached?
         # For audiobooks: Return streaming URL or file URLs
-        if book.audiobook_file.attached?
-          url = Rails.application.routes.url_helpers.rails_blob_url(book.audiobook_file, only_path: false)
-          
-          render json: {
-            title: book.title,
-            audio_files: [url],
-            duration: book.respond_to?(:audio_duration) ? book.audio_duration : 0
-          }
-        else
-          render json: {
-            title: book.title,
-            error: "Audiobook content not available",
-            audio_files: []
-          }, status: :not_found
-        end
+        url = Rails.application.routes.url_helpers.rails_blob_url(book.audiobook_file, only_path: false)
+
+        render json: {
+          title: book.title,
+          audio_files: [url],
+          duration: book.respond_to?(:audio_duration) ? book.audio_duration : 0
+        }
+      else
+        render json: {
+          title: book.title,
+          error: 'Audiobook content not available',
+          audio_files: []
+        }, status: :not_found
       end
     rescue JWT::DecodeError
       render json: { error: 'Invalid reading token' }, status: :unauthorized
@@ -137,7 +133,7 @@ class Api::V1::BooksController < ApplicationController
       Rails.logger.error "Error serving book content: #{e.message}\n#{e.backtrace.join("\n")}"
       render json: { error: 'Error retrieving book content' }, status: :internal_server_error
     end
-  end 
+  end
 
   private
 
@@ -183,29 +179,29 @@ class Api::V1::BooksController < ApplicationController
   end
 
   def render_books_json(books, message = nil, status_code = 200)
-      response = {
-        status: { code: status_code }
-      }
-      
-      # Add message if provided
-      response[:status][:message] = message if message
-      
-      # Handle both collections and single records
-      if books.is_a?(Book)
-        # Single book
-        response[:data] = BookSerializer.new(books).serializable_hash[:data][:attributes]
-      else
-        # Collection of books
-        response[:data] = BookSerializer.new(books).serializable_hash[:data].map { |book| book[:attributes] }
-      end
-      
-      render json: response
+    response = {
+      status: { code: status_code }
+    }
+
+    # Add message if provided
+    response[:status][:message] = message if message
+
+    # Handle both collections and single records
+    response[:data] = if books.is_a?(Book)
+                        # Single book
+                        BookSerializer.new(books).serializable_hash[:data][:attributes]
+                      else
+                        # Collection of books
+                        BookSerializer.new(books).serializable_hash[:data].map { |book| book[:attributes] }
+                      end
+
+    render json: response
   end
 
   # Used to manage error, record not found
   def set_book
     @book = Book.find(params[:id])
-    rescue ActiveRecord::RecordNotFound
+  rescue ActiveRecord::RecordNotFound
     render json: {
       status: { code: 404, message: 'Book not found' }
     }, status: :not_found
@@ -229,13 +225,13 @@ class Api::V1::BooksController < ApplicationController
 
   def normalize_json_arrays
     %i[contributors categories keywords tags].each do |field|
-      if params[:book][field].is_a?(String)
-        begin
-          params[:book][field] = JSON.parse(params[:book][field])
-        rescue JSON::ParserError
-          Rails.logger.warn("Failed to parse JSON for #{field}")
-          params[:book][field] = []
-        end
+      next unless params[:book][field].is_a?(String)
+
+      begin
+        params[:book][field] = JSON.parse(params[:book][field])
+      rescue JSON::ParserError
+        Rails.logger.warn("Failed to parse JSON for #{field}")
+        params[:book][field] = []
       end
     end
   end
@@ -243,7 +239,7 @@ class Api::V1::BooksController < ApplicationController
   # Add this to your books_controller.rb in the private section
   def convert_price_to_cents
     return unless params[:book][:ebook_price].present?
-    
+
     begin
       # Convert from decimal dollars to integer cents
       dollars = BigDecimal(params[:book][:ebook_price])
@@ -256,17 +252,17 @@ class Api::V1::BooksController < ApplicationController
 
   def book_params
     params.require(:book).permit(
-      :title, :description, :edition_number, :primary_audience, 
-      :publishing_rights, :ebook_price, :audiobook_price, 
-      :cover_image, :audiobook_file, :ebook_file, :ai_generated_image, 
-      :explicit_images, :subtitle, :bio, :book_isbn, 
+      :title, :description, :edition_number, :primary_audience,
+      :publishing_rights, :ebook_price, :audiobook_price,
+      :cover_image, :audiobook_file, :ebook_file, :ai_generated_image,
+      :explicit_images, :subtitle, :bio, :book_isbn,
       :terms_and_conditions, :publisher, :first_name, :last_name,
-      keywords: [], 
-      tags: [], 
+      keywords: [],
+      tags: [],
       categories: [],
-      contributors: [:id, :role, :firstName, :lastName],
-      book_contributors_attributes: [:id, :role, :first_name, :last_name], 
-      book_categories_attributes: [:id, :main_genre, :sub_category],
+      contributors: %i[id role firstName lastName],
+      book_contributors_attributes: %i[id role first_name last_name],
+      book_categories_attributes: %i[id main_genre sub_category]
     )
   end
 end
