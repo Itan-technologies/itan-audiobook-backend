@@ -1,4 +1,4 @@
 class Review < ApplicationRecord
-  belongs_to :listener
+  belongs_to :reader
   belongs_to :book
 end

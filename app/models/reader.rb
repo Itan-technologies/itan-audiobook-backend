@@ -16,6 +16,7 @@ class Reader < ApplicationRecord
   # Direct associations
   has_many :notifications, dependent: :destroy
   has_many :reviews, dependent: :destroy
+  has_many :likes, dependent: :destroy
 
   # Validations
   validates :email, presence: true, uniqueness: true
