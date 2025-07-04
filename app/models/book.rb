@@ -5,9 +5,10 @@ class Book < ApplicationRecord
 
   belongs_to :author
   has_many :purchases
-  has_many :listeners, through: :purchases
+  has_many :readers, through: :purchases
   has_many :reviews
   has_many :chapters
+  has_many :likes
 
   # Active Storage attachments
   has_one_attached :ebook_file
