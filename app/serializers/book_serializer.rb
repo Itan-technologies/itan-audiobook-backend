@@ -42,4 +42,36 @@ class BookSerializer
     end
   end
 
+  attribute :author do |book|
+    {
+      id: book.author.id,
+      name: "#{book.author.first_name} #{book.author.last_name}"
+    }
+  end
+
+  attribute :average_rating do |book|
+    book.reviews.average(:rating)&.round(2) || 0
+  end
+
+  attribute :reviews do |book|
+    book.reviews.map do |review|
+      {
+        id: review.id,
+        reader_id: review.reader_id,
+        rating: review.rating,
+        comment: review.comment,
+        created_at: review.created_at
+      }
+    end
+  end
+
+  attribute :reviews_count do |book|
+    book.reviews.count
+  end
+
+
+  attribute :likes_count do |book|
+    book.likes.count
+  end
+
 end
