@@ -1,7 +1,7 @@
 class BookSummarySerializer
     include JSONAPI::Serializer
   
-    attributes :title, :ebook_price, :categories
+    attributes :title, :ebook_price, :categories, :approval_status
   
     attribute :cover_image_url do |book|
       Rails.application.routes.url_helpers.url_for(book.cover_image) if book.cover_image.attached?
