@@ -33,6 +33,19 @@ class Api::V1::BooksController < ApplicationController
     render_books_json(@book)
   end
 
+  # /api/v1/books/:id/storefront
+  def storefront
+    @book = Book.includes(:author, :reviews, :likes, cover_image_attachment: :blob)
+                .find(params[:id])
+    
+    if @book.approval_status != 'approved'
+      render json: { error: "Book not available" }, status: :not_found
+      return
+    end
+  
+    render json: StorefrontBookSerializer.new(@book).serializable_hash
+  end
+
   # POST /api/v1/books
   def create
     @book = current_author.books.new(book_params)    

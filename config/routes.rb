@@ -24,9 +24,13 @@ Rails.application.routes.draw do
     namespace :v1 do
       resources :books do
         collection do
-          get :my_books    
-          get :categories      
+          get :my_books     
+          get :storefront     
         end
+        member do
+          get :storefront  # GET /api/v1/books/:id/storefront
+          get :content #GET /api/v1/books/:id/content
+        end        
       end
 
       # Admin account management
@@ -112,13 +116,7 @@ Rails.application.routes.draw do
         end
       end
 
-      resources :books do
-        member do
-          get :content  # Creates GET /api/v1/books/:id/content
-        end
-      end
-    
-      #This is for reviews & likes
+      #Reviews & likes
       resources :reviews, only: [:create, :destroy]
       resources :likes, only: [:create, :destroy]
 
