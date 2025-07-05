@@ -12,11 +12,13 @@ class Reader < ApplicationRecord
   has_many :purchases, dependent: :destroy
   has_many :purchased_books, through: :purchases, source: :book
   has_many :accessible_chapters, through: :purchased_books, source: :chapters
+  has_many :reading_statuses, dependent: :destroy
   
   # Direct associations
   has_many :notifications, dependent: :destroy
   has_many :reviews, dependent: :destroy
   has_many :likes, dependent: :destroy
+  has_many :liked_books, through: :likes, source: :book
 
   # Validations
   validates :email, presence: true, uniqueness: true

@@ -108,6 +108,16 @@ Rails.application.routes.draw do
         resource :profile, only: [:show, :update, :create]
       end
 
+      namespace :reader do
+        resources :current_reads, only: [:index] do
+          patch ':book_id', to: 'current_reads#update', on: :collection
+        end
+      end
+
+      namespace :reader do
+        resources :finished_books, only: [:index]
+      end
+
       resources :purchases, only: [:create, :index] do
         collection do
           post :verify 
@@ -118,7 +128,7 @@ Rails.application.routes.draw do
 
       #Reviews & likes
       resources :reviews, only: [:create, :destroy]
-      resources :likes, only: [:create, :destroy]
+      resources :likes, only: [:index, :create, :destroy]
 
       # ✅ READER - Complete routes for DRM protected reading
       # resources :reader, only: [:show] do

@@ -9,6 +9,7 @@ class Book < ApplicationRecord
   has_many :reviews
   has_many :chapters
   has_many :likes
+  has_many :liked_by_readers, through: :likes, source: :reader
 
   # Active Storage attachments
   has_one_attached :ebook_file
