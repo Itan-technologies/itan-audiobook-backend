@@ -59,7 +59,7 @@ Rails.application.routes.draw do
             end
         end
         
-        # Optional: analytics dashboard routes
+        # Analytics dashboard routes
         get 'revenue_dashboard', to: 'dashboard#revenue'
       end
 
@@ -118,6 +118,10 @@ Rails.application.routes.draw do
         end
       end
     
+      #This is for reviews & likes
+      resources :reviews, only: [:create, :destroy]
+      resources :likes, only: [:create, :destroy]
+
       # ✅ READER - Complete routes for DRM protected reading
       # resources :reader, only: [:show] do
       #   member do
