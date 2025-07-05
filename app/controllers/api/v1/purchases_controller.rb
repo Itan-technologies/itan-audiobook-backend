@@ -67,10 +67,10 @@ class Api::V1::PurchasesController < ApplicationController
   
   # Get user's purchase history
   def index
-    purchases = current_reader.purchases.includes(:book)
-                             .where(purchase_status: 'completed')
-                             .order(created_at: :desc)
-    
+    purchases = current_reader.purchases.includes(book: { cover_image_attachment: :blob })
+                                 .where(purchase_status: 'completed')
+                                 .order(created_at: :desc)
+  
     render json: {
       status: { code: 200 },
       data: purchases.map do |purchase|
@@ -79,7 +79,10 @@ class Api::V1::PurchasesController < ApplicationController
           book: {
             id: purchase.book.id,
             title: purchase.book.title,
-            author_first_name: purchase.book.first_name
+            author_first_name: purchase.book.first_name,
+            cover_image_url: (
+              Rails.application.routes.url_helpers.url_for(purchase.book.cover_image) if purchase.book.cover_image.attached?
+            )
           },
           content_type: purchase.content_type,
           amount: purchase.amount,
