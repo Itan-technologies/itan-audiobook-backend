@@ -100,10 +100,15 @@ class Api::V1::BooksController < ApplicationController
       # Check if token is for requested book and not expired
       if payload['book_id'] != params[:id] || Time.at(payload['exp']) < Time.current
         return render json: { error: 'Invalid or expired token' }, status: :forbidden
-      end
+      end   
       
       # Serve different content based on type
       book = Book.find(params[:id])
+      
+      unless current_reader&.trial_active? || current_reader&.owns_book?(book)
+        return render json: { error: 'Access denied. Please purchase this book or use your free trial.' }, status: :payment_required
+      end
+      
       content_type = payload['content_type']
       
       if content_type == 'ebook'
