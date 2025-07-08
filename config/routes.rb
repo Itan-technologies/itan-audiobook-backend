@@ -129,7 +129,7 @@ Rails.application.routes.draw do
       #Reviews & likes
       resources :reviews, only: [:create, :destroy]
       resources :likes, only: [:index, :create, :destroy]
-
+      resources :reading_tokens, only: [:create]      
       resource :direct_uploads, only: [:create]
     end
   end
