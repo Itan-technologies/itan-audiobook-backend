@@ -10,7 +10,7 @@ class StorefrontBookSerializer
     attribute :author do |book|
       {
         id: book.author.id,
-        name: "#{book.author.first_name} #{book.author.last_name}"
+        name: "#{book.first_name} #{book.last_name}"
       }
     end
   
