@@ -31,6 +31,19 @@ class Api::V1::LikesController < ApplicationController
       end
     end
   
+    def show
+      like = current_reader.likes.find_by(book_id: params[:book_id])
+      if like
+        render json: {
+          id: like.id,
+          book_id: like.book_id,
+          liked_at: like.created_at
+        }
+      else
+        render json: { error: "Like not found" }, status: :not_found
+      end
+    end
+    
     def destroy
       like = Like.find_by(id: params[:id], reader_id: current_reader.id)
       if like
