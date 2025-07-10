@@ -1,16 +1,20 @@
 class Api::V1::Authors::OmniauthCallbacksController < Devise::OmniauthCallbacksController
-  # Google OAuth callback
+  # the first Google OAuth callback
   def google_oauth2
-    author = Author.from_omniauth(request.env['omniauth.auth'])
+    # --- Using only Author.from_google for Google authentication ---
+    # author = Author.from_omniauth(request.env['omniauth.auth'])
+
+    omniauth_hash = request.env['omniauth.auth']
+    google_params = {
+      uid: omniauth_hash.uid,
+      email: omniauth_hash.info.email
+    }
+    author = Author.from_google(google_params)
 
     if author.persisted?
       if author.two_factor_enabled
-        # Store author ID for verification
         session[:author_id_for_2fa] = author.id
-        # Send verification code
         author.send_two_factor_code
-
-        # Return partial sign-in response
         render json: {
           status: {
             code: 202,
@@ -20,9 +24,7 @@ class Api::V1::Authors::OmniauthCallbacksController < Devise::OmniauthCallbacksC
           }
         }
       else
-        # Sign in without immediate redirect
         sign_in(author)
-
         respond_to do |format|
           format.html { redirect_to after_sign_in_path_for(author) }
           format.json do
@@ -34,7 +36,6 @@ class Api::V1::Authors::OmniauthCallbacksController < Devise::OmniauthCallbacksC
         end
       end
     else
-      # Handle case where author couldn't be created/found
       render json: {
         status: { code: 422, message: 'Google authentication failed' }
       }, status: :unprocessable_entity

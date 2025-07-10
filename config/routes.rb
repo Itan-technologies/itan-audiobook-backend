@@ -1,12 +1,12 @@
 Rails.application.routes.draw do
-  devise_for :authors, controllers: {
-    sessions: 'api/v1/authors/sessions',
-    registrations: 'api/v1/authors/registrations',
-    confirmations: 'api/v1/authors/confirmations',
-    passwords: 'api/v1/authors/passwords',
-    omniauth_callbacks: 'api/v1/authors/omniauth_callbacks'
-  }, defaults: { format: :json },
-     path: 'api/v1/authors'
+ devise_for :authors, controllers: {
+  sessions: 'api/v1/authors/sessions',
+  registrations: 'api/v1/authors/registrations',
+  confirmations: 'api/v1/authors/confirmations',
+  passwords: 'api/v1/authors/passwords',
+  omniauth_callbacks: 'api/v1/authors/omniauth_callbacks'
+}, path: 'api/v1/authors', defaults: { format: :json }
+
 
   devise_for :admins, controllers: {
     sessions: 'api/v1/admins/sessions'
@@ -22,6 +22,15 @@ Rails.application.routes.draw do
   # API Routes
   namespace :api do
     namespace :v1 do
+      devise_scope :author do
+        # post '/api/v1/authors/google_oauth2', to: 'api/v1/authors/sessions#google_oauth2'
+        post 'authors/google_oauth2', to: 'authors/sessions#google_oauth2'
+      end
+
+      namespace :authors do
+        get 'me', to: 'profiles#show' # ✅ Moved to ProfilesController
+      end
+      
       resources :books do
         collection do
           get :my_books          
@@ -99,6 +108,11 @@ Rails.application.routes.draw do
         end
       end
 
+      # namespace :authors do
+      #   post 'google_oauth2', to: 'sessions#google_oauth2'
+      # end
+
+
       namespace :readers do
         resource :profile, only: [:show, :update, :create]
       end
@@ -115,19 +129,15 @@ Rails.application.routes.draw do
         member do
           get :content  # Creates GET /api/v1/books/:id/content
         end
-      end
-    
-      # ✅ READER - Complete routes for DRM protected reading
-      # resources :reader, only: [:show] do
-      #   member do
-      #     get :metadata      # GET /api/v1/reader/:id/metadata?token=...
-      #     get :page         # GET /api/v1/reader/:id/page?page=1&token=...
-      #     # post :refresh_reading_token
-      #     # get :audio_chunk  # GET /api/v1/reader/:id/audio_chunk?start=120&token=...
-      #   end
-      # end
-      
+      end 
+      resources :reviews, only: [:create, :update, :destroy] do
+        collection do
+          get :my_reviews
+          get :recent_reviews
+          get :top_reviews
+        end     
       resource :direct_uploads, only: [:create]
+      end
     end
   end
 
@@ -139,3 +149,4 @@ Rails.application.routes.draw do
   get "up" => "rails/health#show", as: :rails_health_check
   root "api/v1/status#index"
 end
+

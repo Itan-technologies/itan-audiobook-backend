@@ -75,3 +75,12 @@
 - Configure PostgreSQL with Rails(basic local setup)
 - Google authentication for both Authors and Readers.
 
+## Day 2 - Author's Google Authentication
+* 1. Install `omniauth-google-oauth2` and `omniauth-rails_csrf_protection` gems(already installed)
+* 2. enable `OmniAuth` for authentication via `Google OAuth2` by adding code in the author devise model file.
+* 
+### Completed tasks
+### Uncompleted tasks
+### Blockers
+### Upcoming tasks
+

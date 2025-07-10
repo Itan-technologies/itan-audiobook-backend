@@ -89,3 +89,5 @@ group :development do
   # gem "spring"
   gem 'letter_opener'
 end
+
+gem "google-id-token", "~> 1.4"

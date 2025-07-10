@@ -169,6 +169,8 @@ GEM
     ffi (1.17.1-x86_64-linux-musl)
     globalid (1.2.1)
       activesupport (>= 6.1)
+    google-id-token (1.4.2)
+      jwt (>= 1)
     groupdate (6.7.0)
       activesupport (>= 7.1)
     hashery (2.1.2)
@@ -449,6 +451,7 @@ DEPENDENCIES
   devise-two-factor
   dotenv-rails
   down
+  google-id-token (~> 1.4)
   groupdate
   httparty
   image_processing (~> 1.2)

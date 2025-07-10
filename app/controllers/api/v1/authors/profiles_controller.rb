@@ -1,5 +1,7 @@
 class Api::V1::Authors::ProfilesController < ApplicationController
-  before_action :authenticate_author!
+  # before_action :authenticate_author!
+
+   before_action :authorize_request # ✅ JWT auth instead
 
   # POST authors/profile
   def create
@@ -7,6 +9,7 @@ class Api::V1::Authors::ProfilesController < ApplicationController
   end
 
   def show
+    request.env["devise.mapping"] = Devise.mappings[:author]
     render json: {
       status: { code: 200, message: 'Profile successfully displayed' },
       data: AuthorSerializer.new(current_author).serializable_hash[:data][:attributes].merge(
