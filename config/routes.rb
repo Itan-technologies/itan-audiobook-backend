@@ -33,9 +33,13 @@ Rails.application.routes.draw do
       
       resources :books do
         collection do
-          get :my_books    
-          get :categories      
+          get :my_books     
+          get :storefront     
         end
+        member do
+          get :storefront  # GET /api/v1/books/:id/storefront
+          get :content #GET /api/v1/books/:id/content
+        end        
       end
 
       # Admin account management
@@ -68,7 +72,7 @@ Rails.application.routes.draw do
             end
         end
         
-        # Optional: analytics dashboard routes
+        # Analytics dashboard routes
         get 'revenue_dashboard', to: 'dashboard#revenue'
       end
 
@@ -118,6 +122,16 @@ Rails.application.routes.draw do
         resource :profile, only: [:show, :update, :create]
       end
 
+      namespace :reader do
+        resources :current_reads, only: [:index] do
+          patch ':book_id', to: 'current_reads#update', on: :collection
+        end
+      end
+
+      namespace :reader do
+        resources :finished_books, only: [:index]
+      end
+
       resources :purchases, only: [:create, :index] do
         collection do
           post :verify 
@@ -126,6 +140,7 @@ Rails.application.routes.draw do
         end
       end
 
+<<<<<<< HEAD
       resources :books do
         member do
           get :content  # Creates GET /api/v1/books/:id/content
@@ -137,6 +152,12 @@ Rails.application.routes.draw do
           get :recent_reviews
           get :top_reviews
         end     
+=======
+      #Reviews & likes
+      resources :reviews, only: [:create, :destroy]
+      resources :likes, only: [:index, :create, :destroy]
+      resources :reading_tokens, only: [:create]      
+>>>>>>> f4875238b1da82c0470f14d985f60283a1f8077d
       resource :direct_uploads, only: [:create]
       end
     end

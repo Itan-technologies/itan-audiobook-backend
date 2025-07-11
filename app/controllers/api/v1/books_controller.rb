@@ -13,14 +13,13 @@ class Api::V1::BooksController < ApplicationController
 
   respond_to :json
 
-  # GET /api/v1/books
-  def index
-    # Show only approved books to everyone
-    @books = Book.includes(cover_image_attachment: :blob)
-      .where(approval_status: 'approved')
-      .order(created_at: :desc)
+  # GET /api/v1/books # Show only approved books to everyone
+  def index    
+    @books = Book.includes(:author, :reviews, :likes, cover_image_attachment: :blob)
+              .where(approval_status: 'approved')
+              .order(created_at: :desc)
 
-    render_books_json(@books)
+    render json: BookSummarySerializer.new(@books).serializable_hash
   end
 
   # GET /api/v1/books/my_books
@@ -34,8 +33,20 @@ class Api::V1::BooksController < ApplicationController
     render_books_json(@book)
   end
 
-  # POST /api/v1/books
+  # /api/v1/books/:id/storefront
+  def storefront
+    @book = Book.includes(:author, :reviews, :likes, cover_image_attachment: :blob)
+                .find(params[:id])
+    
+    if @book.approval_status != 'approved'
+      render json: { error: "Book not available" }, status: :not_found
+      return
+    end
+  
+    render json: StorefrontBookSerializer.new(@book).serializable_hash
+  end
 
+  # POST /api/v1/books
   def create
     @book = current_author.books.new(book_params)
     begin
@@ -87,10 +98,15 @@ class Api::V1::BooksController < ApplicationController
       # Check if token is for requested book and not expired
       if payload['book_id'] != params[:id] || Time.at(payload['exp']) < Time.current
         return render json: { error: 'Invalid or expired token' }, status: :forbidden
-      end
-
+      end   
+      
       # Serve different content based on type
       book = Book.find(params[:id])
+      
+      unless current_reader&.trial_active? || current_reader&.owns_book?(book)
+        return render json: { error: 'Access denied. Please purchase this book or use your free trial.' }, status: :payment_required
+      end
+      
       content_type = payload['content_type']
 
       if content_type == 'ebook'
@@ -134,6 +150,13 @@ class Api::V1::BooksController < ApplicationController
       render json: { error: 'Error retrieving book content' }, status: :internal_server_error
     end
   end
+
+  # def categories
+  #   all_categories = Book.where(approval_status: 'approved').pluck(:categories).compact
+  #   category_objects = all_categories.flatten
+  #   mains = category_objects.map { |cat| cat["main"]&.strip }.compact.uniq.sort
+  #   render json: { categories: mains.map { |name| { name: name } } }
+  # end
 
   private
 
@@ -236,7 +259,6 @@ class Api::V1::BooksController < ApplicationController
     end
   end
 
-  # Add this to your books_controller.rb in the private section
   def convert_price_to_cents
     return unless params[:book][:ebook_price].present?
 
@@ -257,12 +279,9 @@ class Api::V1::BooksController < ApplicationController
       :cover_image, :audiobook_file, :ebook_file, :ai_generated_image,
       :explicit_images, :subtitle, :bio, :book_isbn,
       :terms_and_conditions, :publisher, :first_name, :last_name,
-      keywords: [],
-      tags: [],
-      categories: [],
-      contributors: %i[id role firstName lastName],
-      book_contributors_attributes: %i[id role first_name last_name],
-      book_categories_attributes: %i[id main_genre sub_category]
+      { contributors: [:role, :firstName, :lastName] },
+      { categories: [:main, :sub, :detail] },
+      keywords: [], tags: []
     )
   end
 end
