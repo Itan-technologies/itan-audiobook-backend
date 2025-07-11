@@ -7,6 +7,7 @@ class Reader < ApplicationRecord
          :jwt_authenticatable, jwt_revocation_strategy: self
 
   before_create :set_jti
+  after_create :set_trial_period
 
   # Associations - Access through purchases, not ownership
   has_many :purchases, dependent: :destroy
@@ -29,6 +30,10 @@ class Reader < ApplicationRecord
     purchased_books.include?(book)
   end
 
+  def trial_active?
+    trial_start.present? && trial_end.present? && Time.current < trial_end
+  end
+
   def can_access_chapter?(chapter)
     owns_book?(chapter.book)
   end
@@ -37,5 +42,13 @@ class Reader < ApplicationRecord
 
   def set_jti
     self.jti ||= SecureRandom.uuid
+  end
+
+  def set_trial_period
+    days = ENV.fetch('TRIAL_PERIOD_DAYS', 14).to_i
+    update(
+      trial_start: Time.current,
+      trial_end: days.days.from_now
+    )
   end
 end

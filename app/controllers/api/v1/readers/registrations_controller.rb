@@ -1,4 +1,3 @@
-# app/controllers/api/v1/readers/registrations_controller.rb
 class Api::V1::Readers::RegistrationsController < Devise::RegistrationsController
   respond_to :json
 

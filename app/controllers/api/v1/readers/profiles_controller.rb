@@ -25,6 +25,6 @@ class Api::V1::Readers::ProfilesController < ApplicationController
   private
 
   def reader_params
-    params.require(:reader).permit(:name, :bio, :avatar) # <-- adjust these fields based on your Reader model
+    params.require(:reader).permit(:first_name, :last_name, :email)
   end
 end
