@@ -16,9 +16,9 @@ class PaystackService
 
     body = {
       email: email,
-      amount: amount, 
+      amount: amount,
       reference: reference,
-      currency: "USD",
+      currency: 'USD',
       metadata: metadata
     }
 
@@ -31,34 +31,32 @@ class PaystackService
     )
 
     result = handle_response(response)
-    
+
     # Include reference in the result
-    if result[:success]
-      result[:reference] = reference
-    end
-    
+    result[:reference] = reference if result[:success]
+
     result
   end
 
   def initiate_transfer(recipient_code, amount_in_kobo, reference = nil, reason = nil)
     reference ||= "TFR_#{SecureRandom.hex(8)}"
-    
+
     body = {
-      source: "balance",
+      source: 'balance',
       amount: amount_in_kobo,
       recipient: recipient_code,
-      currency: "NGN",
+      currency: 'NGN',
       reference: reference
     }
-    
+
     body[:reason] = reason if reason
-    
+
     response = self.class.post(
       '/transfer',
       headers: @headers,
       body: body.to_json
     )
-    
+
     handle_response(response)
   end
 
@@ -67,14 +65,14 @@ class PaystackService
       "/transfer/verify/#{reference}",
       headers: @headers
     )
-    
+
     handle_response(response)
   end
 
   def verify_transaction(reference)
     response = self.class.get("/transaction/verify/#{reference}", {
-      headers: @headers
-    })
+                                headers: @headers
+                              })
 
     if response.success?
       {
@@ -87,7 +85,7 @@ class PaystackService
         error: response.parsed_response['message'] || 'Payment verification failed'
       }
     end
-    rescue => e
+  rescue StandardError => e
     {
       success: false,
       error: e.message
@@ -97,48 +95,48 @@ class PaystackService
   def self.resolve_account(account_number, bank_code)
     require 'uri'
     require 'net/http'
-    
+
     url = URI("https://api.paystack.co/bank/resolve?account_number=#{account_number}&bank_code=#{bank_code}")
-    
+
     http = Net::HTTP.new(url.host, url.port)
     http.use_ssl = true
-    
+
     request = Net::HTTP::Get.new(url)
-    request["Authorization"] = "Bearer #{ENV['PAYSTACK_SECRET_KEY']}"
-    
+    request['Authorization'] = "Bearer #{ENV.fetch('PAYSTACK_SECRET_KEY', nil)}"
+
     response = http.request(request)
     JSON.parse(response.body)
-    rescue => e
+  rescue StandardError => e
     Rails.logger.error "PaystackService Error: #{e.message}"
-    { "status" => false, "message" => "Service unavailable" }
+    { 'status' => false, 'message' => 'Service unavailable' }
   end
 
   def self.list_banks
     require 'uri'
     require 'net/http'
-    
-    url = URI("https://api.paystack.co/bank")
-    
+
+    url = URI('https://api.paystack.co/bank')
+
     http = Net::HTTP.new(url.host, url.port)
     http.use_ssl = true
-    
+
     request = Net::HTTP::Get.new(url)
-    request["Authorization"] = "Bearer #{ENV['PAYSTACK_SECRET_KEY']}"
-    
+    request['Authorization'] = "Bearer #{ENV.fetch('PAYSTACK_SECRET_KEY', nil)}"
+
     response = http.request(request)
     JSON.parse(response.body)
-    rescue => e
-      Rails.logger.error "PaystackService Error (list_banks): #{e.message}"
-      { "status" => false, "message" => "Service unavailable" }
+  rescue StandardError => e
+    Rails.logger.error "PaystackService Error (list_banks): #{e.message}"
+    { 'status' => false, 'message' => 'Service unavailable' }
   end
 
   def create_transfer_recipient(name:, account_number:, bank_code:)
     body = {
-      type: "nuban",
+      type: 'nuban',
       name: name,
       account_number: account_number,
       bank_code: bank_code,
-      currency: "NGN"
+      currency: 'NGN'
     }
     response = self.class.post(
       '/transferrecipient',

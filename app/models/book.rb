@@ -37,13 +37,13 @@ class Book < ApplicationRecord
   scope :publicly_visible, -> { approved }
 
   # Enable nested attributes
-  # accepts_nested_attributes_for :book_contributors, 
+  # accepts_nested_attributes_for :book_contributors,
   #                               allow_destroy: true,
   #                               reject_if: :all_blank
-                                
+
   # accepts_nested_attributes_for :book_categories,
-                                # allow_destroy: true,
-                                # reject_if: :all_blank
+  # allow_destroy: true,
+  # reject_if: :all_blank
 
   # Add a method to get standardized cover
   # def standardized_cover_url
@@ -80,20 +80,20 @@ class Book < ApplicationRecord
 
   # def check_price_size_ratio
   #   return unless ebook.attached? || audiobook.attached?
-    
+
   #   content_types = []
   #   content_types << 'ebook' if ebook.attached?
   #   content_types << 'audiobook' if audiobook.attached?
-    
+
   #   content_types.each do |type|
   #     attachment = type == 'ebook' ? ebook : audiobook
   #     size_mb = (attachment.blob.byte_size.to_f / (1024 * 1024)).round(2)
   #     price_field = type == 'ebook' ? :ebook_price : :audiobook_price
   #     current_price = send(price_field)
-      
+
   #     # Calculate minimum recommended price
   #     min_price = RevenueCalculationService.calculate_minimum_recommended_price(size_mb)
-      
+
   #     if current_price < min_price
   #       # Set warning flag and store in JSON field (add this column to your model)
   #       self.price_warnings ||= {}
@@ -110,15 +110,12 @@ class Book < ApplicationRecord
   private
 
   def ensure_arrays_format
-    if keywords.present? && !keywords.is_a?(Array)
-      self.keywords = keywords.split(',').map(&:strip)
-    end
-    
-    if tags.present? && !tags.is_a?(Array)
-      self.tags = tags.split(',').map(&:strip)
-    end
+    self.keywords = keywords.split(',').map(&:strip) if keywords.present? && !keywords.is_a?(Array)
+
+    return unless tags.present? && !tags.is_a?(Array)
+
+    self.tags = tags.split(',').map(&:strip)
   end
-  
 
   def generate_unique_ids
     # Use a transaction to prevent race conditions
@@ -169,8 +166,8 @@ class Book < ApplicationRecord
   #       errors.add(:contributors, "must have at least one contributor")
   #       return
   #     end
-  #   end 
-  # end   
+  #   end
+  # end
 
   # def categories_must_be_valid
   #   if categories.present?
