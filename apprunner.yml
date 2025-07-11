@@ -1,0 +1,60 @@
+version: 1.0
+runtime: ruby 3.1
+
+build:
+  commands:
+    pre-build:
+      - yum update -y > /dev/null 2>&1
+      - gem install bundler
+    build:
+      - bundle install
+      - bundle exec rails assets:precompile
+
+run:
+  runtime-version: 3.1.0
+  command: bundle exec rails server -b 0.0.0.0
+  network:
+    port: 3000
+  env:
+    - name: RAILS_ENV
+      value: production
+  secrets:
+    - name: APP_SPEC_PASSWORD
+      value-from: arn:aws:ssm:eu-west-1:941377147136:parameter/myapp/production/APP_SPEC_PASSWORD
+    - name: DEVISE_JWT_SECRET_KEY
+      value-from: arn:aws:ssm:eu-west-1:941377147136:parameter/myapp/production/DEVISE_JWT_SECRET_KEY
+    - name: FRONTEND_URL
+      value-from: arn:aws:ssm:eu-west-1:941377147136:parameter/myapp/production/FRONTEND_URL
+    - name: LOCAL_MAIL_HOST
+      value-from: arn:aws:ssm:eu-west-1:941377147136:parameter/myapp/production/LOCAL_MAIL_HOST
+    - name: MIN_PAYMENT_THRESHOLD
+      value-from: arn:aws:ssm:eu-west-1:941377147136:parameter/myapp/production/MIN_PAYMENT_THRESHOLD
+    - name: OPENEXCHANGE_APP_ID
+      value-from: arn:aws:ssm:eu-west-1:941377147136:parameter/myapp/production/OPENEXCHANGE_APP_ID
+    - name: PAYSTACK_SECRET_KEY
+      value-from: arn:aws:ssm:eu-west-1:941377147136:parameter/myapp/production/PAYSTACK_SECRET_KEY
+    - name: RECAPTCHA_SECRET_KEY
+      value-from: arn:aws:ssm:eu-west-1:941377147136:parameter/myapp/production/RECAPTCHA_SECRET_KEY
+    - name: SENDMAIL_USERNAME
+      value-from: arn:aws:ssm:eu-west-1:941377147136:parameter/myapp/production/SENDMAIL_USERNAME
+    - name: TRIAL_PERIOD_DAYS
+      value-from: arn:aws:ssm:eu-west-1:941377147136:parameter/myapp/production/TRIAL_PERIOD_DAYS
+    - name: TWILIO_ACCOUNT_SID
+      value-from: arn:aws:ssm:eu-west-1:941377147136:parameter/myapp/production/TWILIO_ACCOUNT_SID
+    - name: TWILIO_AUTH_TOKEN
+      value-from: arn:aws:ssm:eu-west-1:941377147136:parameter/myapp/production/TWILIO_AUTH_TOKEN
+    - name: TWILIO_PHONE_NUMBER
+      value-from: arn:aws:ssm:eu-west-1:941377147136:parameter/myapp/production/TWILIO_PHONE_NUMBER
+    - name: DATABASE_URL
+      value-from: arn:aws:ssm:eu-west-1:941377147136:parameter/myapp/DATABASE_URL
+    - name: DB_HOST
+      value-from: arn:aws:ssm:eu-west-1:941377147136:parameter/myapp/DB_HOST
+    - name: DB_PORT
+      value-from: arn:aws:ssm:eu-west-1:941377147136:parameter/myapp/DB_PORT
+    - name: DB_NAME
+      value-from: arn:aws:ssm:eu-west-1:941377147136:parameter/myapp/DB_NAME
+    - name: DB_USERNAME
+      value-from: arn:aws:ssm:eu-west-1:941377147136:parameter/myapp/DB_USERNAME
+    - name: DB_PASSWORD
+      value-from: arn:aws:ssm:eu-west-1:941377147136:parameter/myapp/DB_PASSWORD
+
