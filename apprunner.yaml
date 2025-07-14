@@ -3,9 +3,9 @@ runtime: ruby31
 
 build:
   commands:
-    pre-build:
-      - yum update -y > /dev/null 2>&1
-      - gem install bundler
+    # pre-build:
+    #   - yum update -y > /dev/null 2>&1
+    #   - gem install bundler
     build:
       - bundle install
       - bundle exec rails assets:precompile
