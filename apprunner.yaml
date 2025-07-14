@@ -1,5 +1,6 @@
 version: 1.0
 runtime: ruby31
+instance-role-arn: arn:aws:iam::941377147136:role/AppRunnerInstanceRoleMyApp
 
 build:
   commands:
