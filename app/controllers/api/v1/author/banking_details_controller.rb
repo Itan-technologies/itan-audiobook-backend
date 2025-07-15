@@ -18,32 +18,93 @@ class Api::V1::Author::BankingDetailsController < ApplicationController
   def update
     banking_detail = current_author.author_banking_detail || current_author.build_author_banking_detail
     
-    if banking_detail.update(banking_detail_params)
-      render json: banking_detail, status: :ok
+    # Set the new banking details
+    banking_detail.assign_attributes(banking_detail_params)
+    
+    # Verify the account before saving
+    if banking_detail.verify_account!
+      # If verification succeeds, save the details
+      if banking_detail.save
+        render json: {
+          success: true,
+          message: "Banking details verified and saved successfully",
+          data: banking_detail.as_json.merge(
+            account_name: banking_detail.resolved_account_name,
+            verified: true,
+            verified_at: banking_detail.verified_at
+          )
+        }, status: :ok
+      else
+        render json: { 
+          success: false,
+          errors: banking_detail.errors.full_messages 
+        }, status: :unprocessable_entity
+      end
     else
-      render json: { errors: banking_detail.errors.full_messages }, status: :unprocessable_entity
+      # If verification fails, don't save and return verification errors
+      render json: { 
+        success: false,
+        message: "Account verification failed",
+        errors: banking_detail.errors.full_messages 
+      }, status: :unprocessable_entity
     end
   end
   
+  # Verify banking details (works with saved details or provided params)
   def verify
-    banking_detail = current_author.author_banking_detail
+    # Use provided params OR fallback to saved banking details
+    bank_code = params[:bank_code]
+    account_number = params[:account_number]
     
-    if !banking_detail
-      render json: { error: "Banking details not found" }, status: :not_found
-      return
-    end
-    
-    if banking_detail.verify_account!
-      render json: { 
-        success: true,
-        account_name: banking_detail.resolved_account_name,
-        message: "Account verified successfully"
-      }
+    # If no params provided, use saved banking details
+    if bank_code.blank? || account_number.blank?
+      banking_detail = current_author.author_banking_detail
+      
+      if !banking_detail
+        render json: { error: "Banking details not found" }, status: :not_found
+        return
+      end
+      
+      # Use the verify_account! method on the saved record
+      if banking_detail.verify_account!
+        render json: { 
+          success: true,
+          account_name: banking_detail.resolved_account_name,
+          message: "Account verified successfully"
+        }
+      else
+        render json: { 
+          success: false, 
+          errors: banking_detail.errors.full_messages 
+        }, status: :unprocessable_entity
+      end
     else
-      render json: { 
-        success: false, 
-        errors: banking_detail.errors.full_messages 
-      }, status: :unprocessable_entity
+      # Direct verification with provided params (for real-time validation)
+      begin
+        Rails.logger.info "Real-time validation: #{account_number}, #{bank_code}"
+        response = PaystackService.resolve_account(account_number, bank_code)
+        Rails.logger.info "Paystack Response: #{response.inspect}"
+        
+        if response["status"] == true
+          render json: {
+            success: true,
+            account_name: response["data"]["account_name"],
+            message: "Account verified successfully"
+          }
+        else
+          error_message = response["message"] || "Account verification failed"
+          render json: {
+            success: false,
+            error: error_message
+          }, status: :unprocessable_entity
+        end
+      rescue => e
+        Rails.logger.error "Validation error: #{e.message}"
+        render json: {
+          success: false,
+          error: "Verification service error"
+        }, status: :internal_server_error
+      end
     end
   end
 
