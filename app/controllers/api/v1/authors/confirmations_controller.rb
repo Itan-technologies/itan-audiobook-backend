@@ -34,7 +34,7 @@ class Api::V1::Authors::ConfirmationsController < Devise::ConfirmationsControlle
   # Add this method to your controller
   def confirm
     self.resource = resource_class.confirm_by_token(params[:confirmation_token])
-    
+
     if resource.errors.empty?
       render json: {
         status: { code: 200, message: 'Your account has been successfully confirmed.' }
@@ -45,8 +45,7 @@ class Api::V1::Authors::ConfirmationsController < Devise::ConfirmationsControlle
       }, status: :unprocessable_entity
     end
   end
-  
-  protected
+
 
   # The path used after resending confirmation instructions.
   # def after_resending_confirmation_instructions_path_for(_resource_name)

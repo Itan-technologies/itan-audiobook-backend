@@ -37,6 +37,12 @@ Rails.application.configure do
   config.active_storage.direct_upload = true
 
   Rails.application.routes.default_url_options[:host] = 'localhost:3000'
+  Rails.application.routes.default_url_options[:protocol] = 'http'
+  #commented out to avoid conflicts with the default URL options set below: https://localhost:3000/api/v1/authors/auth/google_oauth2/callback
+
+  # Ensure that the default URL options are set to use HTTPS
+  # Rails.application.routes.default_url_options[:host] = 'itan-technologies.com'
+  # Use the correct protocol for URL generation
 
   # Don't care if the mailer can't send.
   config.action_mailer.raise_delivery_errors = true
