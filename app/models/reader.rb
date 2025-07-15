@@ -13,12 +13,8 @@ class Reader < ApplicationRecord
   has_many :purchases, dependent: :destroy
   has_many :purchased_books, through: :purchases, source: :book
   has_many :accessible_chapters, through: :purchased_books, source: :chapters
-<<<<<<< HEAD
-
-=======
   has_many :reading_statuses, dependent: :destroy
-  
->>>>>>> f4875238b1da82c0470f14d985f60283a1f8077d
+
   # Direct associations
   has_many :notifications, dependent: :destroy
   has_many :reviews, dependent: :destroy
