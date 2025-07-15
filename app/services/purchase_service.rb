@@ -1,6 +1,6 @@
 class PurchaseService
   class ValidationError < StandardError; end
-  
+
   def initialize(reader, book, content_type)
     @reader = reader
     @book = book
@@ -9,20 +9,18 @@ class PurchaseService
 
   def create_purchase
     validate_purchase!
-    
+
     result = nil
 
     reference = generate_reference
-    
+
     Purchase.transaction do
       @purchase = create_purchase_record(reference)
       payment_result = initialize_payment(reference)
-      
+
       # If payment initialization fails, rollback everything
-      unless payment_result[:success]
-        raise StandardError, payment_result[:error]
-      end
-      
+      raise StandardError, payment_result[:error] unless payment_result[:success]
+
       result = {
         success: true,
         data: {
@@ -35,9 +33,8 @@ class PurchaseService
         }
       }
     end
-    
+
     result
-    
   rescue ValidationError => e
     { success: false, error: e.message }
   rescue StandardError => e
@@ -83,7 +80,7 @@ class PurchaseService
       purchase_status: 'pending',
       purchase_date: Time.current,
       transaction_reference: reference,
-      paystack_fee: nil, 
+      paystack_fee: nil,
       delivery_fee: nil,
       admin_revenue: nil,
       author_revenue_amount: nil,

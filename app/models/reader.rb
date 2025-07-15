@@ -14,7 +14,7 @@ class Reader < ApplicationRecord
   has_many :purchased_books, through: :purchases, source: :book
   has_many :accessible_chapters, through: :purchased_books, source: :chapters
   has_many :reading_statuses, dependent: :destroy
-  
+
   # Direct associations
   has_many :notifications, dependent: :destroy
   has_many :reviews, dependent: :destroy
@@ -37,7 +37,7 @@ class Reader < ApplicationRecord
   def can_access_chapter?(chapter)
     owns_book?(chapter.book)
   end
-  
+
   private
 
   def set_jti

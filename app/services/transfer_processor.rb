@@ -3,19 +3,23 @@ class TransferProcessor
   require 'json'
 
   def self.fetch_ngn_rate
-    app_id = ENV['OPENEXCHANGE_APP_ID']
+    app_id = ENV.fetch('OPENEXCHANGE_APP_ID', nil)
     url = URI("https://openexchangerates.org/api/latest.json?app_id=#{app_id}")
     begin
       response = Net::HTTP.get(url)
-      data = JSON.parse(response) rescue nil
+      data = begin
+        JSON.parse(response)
+      rescue StandardError
+        nil
+      end
 
-      if data.nil? || !data["rates"] || !data["rates"]["NGN"]
+      if data.nil? || !data['rates'] || !data['rates']['NGN']
         Rails.logger.error "Exchange rate fetch failed or NGN rate missing. Response: #{response}"
         return nil
       end
 
-      data["rates"]["NGN"]
-    rescue => e
+      data['rates']['NGN']
+    rescue StandardError => e
       Rails.logger.error "Error fetching exchange rate: #{e.message}"
       nil
     end
@@ -26,8 +30,8 @@ class TransferProcessor
 
     usd_to_ngn = fetch_ngn_rate
     if usd_to_ngn.nil?
-      Rails.logger.error "Failed to fetch USD to NGN rate. Aborting transfer."
-      return { success: [], failed: [{ reason: "Could not fetch exchange rate" }] }
+      Rails.logger.error 'Failed to fetch USD to NGN rate. Aborting transfer.'
+      return { success: [], failed: [{ reason: 'Could not fetch exchange rate' }] }
     end
     Rails.logger.info "Current USD to NGN rate: #{usd_to_ngn}"
 
@@ -57,7 +61,7 @@ class TransferProcessor
             notes: "#{payment.notes}\nTransfer failed: No verified banking details"
           )
         end
-        results[:failed] << { author: author.email, reason: "No verified banking details" }
+        results[:failed] << { author: author.email, reason: 'No verified banking details' }
         next
       end
 
@@ -94,7 +98,7 @@ class TransferProcessor
         results[:success] << { author: author.email, amount: total_ngn }
       else
         # Log failure
-        error_message = transfer_result[:error] || "Unknown error"
+        error_message = transfer_result[:error] || 'Unknown error'
         Rails.logger.error "Transfer failed for author: #{author.email}, reason: #{error_message}"
         payments.each do |payment|
           payment.update(

@@ -1,57 +1,89 @@
 class Api::V1::Authors::SessionsController < Devise::SessionsController
   require 'net/http'
   require 'uri'
+  require 'google-id-token' # Add this gem for verifying Google tokens
 
   include Recaptcha::Adapters::ControllerMethods
 
   respond_to :json
 
   # Skip authentication check for the sign-out action
+  # protect_from_forgery with: :null_session
+
+  # ✅ Skip reCAPTCHA for Google OAuth API
+
+
+  # Create a session (email/password login)
+  # Skip JWT authorization for google_oauth2
+  skip_before_action :authorize_request, only: [:google_oauth2]
+
+
+  # ✅ Google OAuth API endpoint (JWT flow)
+
+  # ✅ Skip authentication checks for these actions
+  skip_before_action :authenticate_request, only: [:google_oauth2]
   skip_before_action :verify_signed_out_user, only: :destroy
+  skip_before_action :verify_authenticity_token, only: [:google_oauth2]
 
-  def set_flash_message(key, kind, options = {})
-    # Do nothing as flash is not available in API-only apps
+  # ✅ Test endpoint to get current user
+  def me
+    render json: {
+      user: AuthorSerializer.new(current_author).serializable_hash[:data][:attributes].merge(id: current_author.id)
+    }
   end
 
-  def set_flash_message!(key, kind, options = {})
-    # Do nothing as flash is not available in API-only apps
-  end
+  # ✅ Google OAuth API endpoint (JWT flow)
+  def google_oauth2
+    access_token = params[:access_token]
 
-  # Create a session (login attempt)
-  def create
-    # Verify reCAPTCHA first
-    unless verify_recaptcha_token(params[:author][:captchaToken])
+    if access_token.blank?
+      render json: { error: 'Missing Google access token' }, status: :bad_request
       return
     end
-  
-    # Remove captchaToken to prevent Devise errors
-    params[:author].delete(:captchaToken) if params[:author]&.key?(:captchaToken)
 
     begin
-      # First stage authentication with email/password
-      self.resource = warden.authenticate!(auth_options)
+      # Fetch user info from Google API
+      user_info_response = Faraday.get('https://www.googleapis.com/oauth2/v3/userinfo', {}, {
+                                         Authorization: "Bearer #{access_token}"
+                                       })
 
-      # Handle authentication based on 2FA status
-      if resource.two_factor_enabled?
-        handle_two_factor_authentication
-      else
-        # No 2FA required, complete login
-        sign_in(resource_name, resource)
-        respond_with(resource)
+      user_info = JSON.parse(user_info_response.body)
+      Rails.logger.info "Google user info: #{user_info}"
+
+      if user_info['email'].blank?
+        render json: { error: 'Failed to fetch user info from Google' }, status: :unauthorized
+        return
       end
-    rescue => e
-      Rails.logger.error "Authentication error: #{e.message}"
+
+      # Find or create Author
+      author = Author.find_or_create_by(email: user_info['email']) do |a|
+        a.uid = user_info['sub']
+        a.provider = 'google_oauth2'
+        a.password = SecureRandom.hex(16)
+        a.first_name = user_info['given_name']
+        a.last_name = user_info['family_name']
+        a.confirmed_at = Time.current # skip email confirmation
+      end
+
+      # Issue JWT token for API clients
+      jwt_token = JwtService.encode(author_id: author.id)
+
       render json: {
-        status: { code: 401, message: "Invalid email or password" }
-      }, status: :unauthorized
+        status: { code: 200, message: 'Logged in successfully' },
+        token: jwt_token,
+        user: AuthorSerializer.new(author).serializable_hash[:data][:attributes].merge(id: author.id)
+      }
+    rescue StandardError => e
+      Rails.logger.error "Google OAuth error: #{e.message}"
+      render json: { error: 'Google authentication failed' }, status: :internal_server_error
     end
   end
 
-# Helper method for 2FA handling
+  # Helper method for 2FA handling
   def handle_two_factor_authentication
     session[:author_id_for_2fa] = resource.id
     resource.send_two_factor_code
-    
+
     render json: {
       status: {
         code: 202,
@@ -80,10 +112,7 @@ class Api::V1::Authors::SessionsController < Devise::SessionsController
   end
 
   def respond_to_on_destroy
-    if current_author
-      # Track successful logout if needed
-      logger.info "Author #{current_author.id} signed out successfully"
-    end
+    logger.info "Author #{current_author.id} signed out successfully" if current_author
 
     render json: {
       status: 200,
@@ -92,31 +121,23 @@ class Api::V1::Authors::SessionsController < Devise::SessionsController
   end
 
   def verify_recaptcha_token(token)
-      # Skip verification in development environment
-    # if Rails.env.development?
-    #   Rails.logger.warn "⚠️ BYPASSING reCAPTCHA verification in development!"
-    #   return true
-    # end
-        
-    uri = URI('https://www.google.com/recaptcha/api/siteverify')
-    
     uri = URI('https://www.google.com/recaptcha/api/siteverify')
     http = Net::HTTP.new(uri.host, uri.port)
     http.use_ssl = true
     http.open_timeout = 5
     http.read_timeout = 5
-    
+
     begin
       response = http.post(uri.path, URI.encode_www_form({
-        secret: ENV['RECAPTCHA_SECRET_KEY'],
-        response: token
-      }))
-      
+                                                           secret: ENV.fetch('RECAPTCHA_SECRET_KEY', nil),
+                                                           response: token
+                                                         }))
+
       result = JSON.parse(response.body)
       recaptcha_valid = result['success'] == true
-      
+
       Rails.logger.info "reCAPTCHA direct verification: #{result.inspect}"
-      
+
       unless recaptcha_valid
         render json: {
           status: { code: 422, message: "reCAPTCHA verification failed: #{result['error-codes']}" }
@@ -124,10 +145,10 @@ class Api::V1::Authors::SessionsController < Devise::SessionsController
         return false
       end
       true
-    rescue => e
+    rescue StandardError => e
       Rails.logger.error "reCAPTCHA verification error: #{e.message}"
       render json: {
-        status: { code: 500, message: "Failed to verify reCAPTCHA" }
+        status: { code: 500, message: 'Failed to verify reCAPTCHA' }
       }, status: :internal_server_error
       false
     end
