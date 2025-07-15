@@ -14,10 +14,10 @@ class Api::V1::BooksController < ApplicationController
   respond_to :json
 
   # GET /api/v1/books # Show only approved books to everyone
-  def index    
+  def index
     @books = Book.includes(:author, :reviews, :likes, cover_image_attachment: :blob)
-              .where(approval_status: 'approved')
-              .order(created_at: :desc)
+      .where(approval_status: 'approved')
+      .order(created_at: :desc)
 
     render json: BookSummarySerializer.new(@books).serializable_hash
   end
@@ -36,13 +36,13 @@ class Api::V1::BooksController < ApplicationController
   # /api/v1/books/:id/storefront
   def storefront
     @book = Book.includes(:author, :reviews, :likes, cover_image_attachment: :blob)
-                .find(params[:id])
-    
+      .find(params[:id])
+
     if @book.approval_status != 'approved'
-      render json: { error: "Book not available" }, status: :not_found
+      render json: { error: 'Book not available' }, status: :not_found
       return
     end
-  
+
     render json: StorefrontBookSerializer.new(@book).serializable_hash
   end
 
@@ -98,15 +98,16 @@ class Api::V1::BooksController < ApplicationController
       # Check if token is for requested book and not expired
       if payload['book_id'] != params[:id] || Time.at(payload['exp']) < Time.current
         return render json: { error: 'Invalid or expired token' }, status: :forbidden
-      end   
-      
+      end
+
       # Serve different content based on type
       book = Book.find(params[:id])
-      
+
       unless current_reader&.trial_active? || current_reader&.owns_book?(book)
-        return render json: { error: 'Access denied. Please purchase this book or use your free trial.' }, status: :payment_required
+        return render json: { error: 'Access denied. Please purchase this book or use your free trial.' },
+                      status: :payment_required
       end
-      
+
       content_type = payload['content_type']
 
       if content_type == 'ebook'
@@ -279,8 +280,8 @@ class Api::V1::BooksController < ApplicationController
       :cover_image, :audiobook_file, :ebook_file, :ai_generated_image,
       :explicit_images, :subtitle, :bio, :book_isbn,
       :terms_and_conditions, :publisher, :first_name, :last_name,
-      { contributors: [:role, :firstName, :lastName] },
-      { categories: [:main, :sub, :detail] },
+      { contributors: %i[role firstName lastName] },
+      { categories: %i[main sub detail] },
       keywords: [], tags: []
     )
   end

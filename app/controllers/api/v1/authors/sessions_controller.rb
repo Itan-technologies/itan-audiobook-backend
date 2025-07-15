@@ -9,60 +9,59 @@ class Api::V1::Authors::SessionsController < Devise::SessionsController
 
   # Skip authentication check for the sign-out action
   # protect_from_forgery with: :null_session
-  
+
   # ✅ Skip reCAPTCHA for Google OAuth API
-  
-  
+
+
   # Create a session (email/password login)
   # Skip JWT authorization for google_oauth2
-skip_before_action :authorize_request, only: [:google_oauth2]
+  skip_before_action :authorize_request, only: [:google_oauth2]
 
-  
+
   # ✅ Google OAuth API endpoint (JWT flow)
-  
+
   # ✅ Skip authentication checks for these actions
   skip_before_action :authenticate_request, only: [:google_oauth2]
   skip_before_action :verify_signed_out_user, only: :destroy
   skip_before_action :verify_authenticity_token, only: [:google_oauth2]
 
-   # ✅ Test endpoint to get current user
+  # ✅ Test endpoint to get current user
   def me
     render json: {
       user: AuthorSerializer.new(current_author).serializable_hash[:data][:attributes].merge(id: current_author.id)
     }
   end
 
-
   # ✅ Google OAuth API endpoint (JWT flow)
   def google_oauth2
     access_token = params[:access_token]
 
     if access_token.blank?
-      render json: { error: "Missing Google access token" }, status: :bad_request
+      render json: { error: 'Missing Google access token' }, status: :bad_request
       return
     end
 
     begin
       # Fetch user info from Google API
-      user_info_response = Faraday.get("https://www.googleapis.com/oauth2/v3/userinfo", {}, {
-        Authorization: "Bearer #{access_token}"
-      })
+      user_info_response = Faraday.get('https://www.googleapis.com/oauth2/v3/userinfo', {}, {
+                                         Authorization: "Bearer #{access_token}"
+                                       })
 
       user_info = JSON.parse(user_info_response.body)
       Rails.logger.info "Google user info: #{user_info}"
 
-      if user_info["email"].blank?
-        render json: { error: "Failed to fetch user info from Google" }, status: :unauthorized
+      if user_info['email'].blank?
+        render json: { error: 'Failed to fetch user info from Google' }, status: :unauthorized
         return
       end
 
       # Find or create Author
-      author = Author.find_or_create_by(email: user_info["email"]) do |a|
-        a.uid = user_info["sub"]
-        a.provider = "google_oauth2"
+      author = Author.find_or_create_by(email: user_info['email']) do |a|
+        a.uid = user_info['sub']
+        a.provider = 'google_oauth2'
         a.password = SecureRandom.hex(16)
-        a.first_name = user_info["given_name"]
-        a.last_name = user_info["family_name"]
+        a.first_name = user_info['given_name']
+        a.last_name = user_info['family_name']
         a.confirmed_at = Time.current # skip email confirmation
       end
 
@@ -70,13 +69,13 @@ skip_before_action :authorize_request, only: [:google_oauth2]
       jwt_token = JwtService.encode(author_id: author.id)
 
       render json: {
-        status: { code: 200, message: "Logged in successfully" },
+        status: { code: 200, message: 'Logged in successfully' },
         token: jwt_token,
         user: AuthorSerializer.new(author).serializable_hash[:data][:attributes].merge(id: author.id)
       }
-    rescue => e
+    rescue StandardError => e
       Rails.logger.error "Google OAuth error: #{e.message}"
-      render json: { error: "Google authentication failed" }, status: :internal_server_error
+      render json: { error: 'Google authentication failed' }, status: :internal_server_error
     end
   end
 
@@ -113,9 +112,7 @@ skip_before_action :authorize_request, only: [:google_oauth2]
   end
 
   def respond_to_on_destroy
-    if current_author
-      logger.info "Author #{current_author.id} signed out successfully"
-    end
+    logger.info "Author #{current_author.id} signed out successfully" if current_author
 
     render json: {
       status: 200,
@@ -132,9 +129,9 @@ skip_before_action :authorize_request, only: [:google_oauth2]
 
     begin
       response = http.post(uri.path, URI.encode_www_form({
-        secret: ENV.fetch('RECAPTCHA_SECRET_KEY', nil),
-        response: token
-      }))
+                                                           secret: ENV.fetch('RECAPTCHA_SECRET_KEY', nil),
+                                                           response: token
+                                                         }))
 
       result = JSON.parse(response.body)
       recaptcha_valid = result['success'] == true

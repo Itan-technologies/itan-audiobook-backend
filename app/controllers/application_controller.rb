@@ -20,7 +20,7 @@ class ApplicationController < ActionController::API
   def authenticate_request
     header = request.headers['Authorization']
     if header.present?
-      token = header.split(' ').last
+      token = header.split.last
       begin
         decoded = JwtService.decode(token)
         @current_author = Author.find(decoded['author_id'])
@@ -35,7 +35,7 @@ class ApplicationController < ActionController::API
 
   def authorize_request
     header = request.headers['Authorization']
-    token = header.split(' ').last if header
+    token = header.split.last if header
 
     if token.blank?
       render json: { error: 'Missing token' }, status: :unauthorized

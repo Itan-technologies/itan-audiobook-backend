@@ -73,5 +73,4 @@ class BookSerializer
   attribute :likes_count do |book|
     book.likes.count
   end
-
 end

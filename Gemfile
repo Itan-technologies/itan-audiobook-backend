@@ -90,4 +90,4 @@ group :development do
   gem 'letter_opener'
 end
 
-gem "google-id-token", "~> 1.4"
+gem 'google-id-token', '~> 1.4'

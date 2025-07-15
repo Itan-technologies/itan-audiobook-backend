@@ -87,8 +87,8 @@ class Author < ApplicationRecord
 
   # Google OAuth specific method
   def self.from_google(u)
-      create_with(uid: u[:uid], provider: 'google_oauth2',
-            password: Devise.friendly_token[0, 20]).find_or_create_by!(email: u[:email])
+    create_with(uid: u[:uid], provider: 'google_oauth2',
+                password: Devise.friendly_token[0, 20]).find_or_create_by!(email: u[:email])
   end
 
   def self.attach_profile_image(author, image_url)
