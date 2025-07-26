@@ -8,7 +8,7 @@ class Api::V1::Readers::SessionsController < Devise::SessionsController
     if resource
       # Generate JWT token manually (more reliable)
       token = generate_jwt_token(resource)
-      
+
       render json: {
         status: { code: 200, message: 'Logged in successfully.' },
         data: ReaderSerializer.new(resource).serializable_hash[:data][:attributes].merge(
@@ -17,10 +17,10 @@ class Api::V1::Readers::SessionsController < Devise::SessionsController
         )
       }
     end
-  rescue => e
+  rescue StandardError => e
     Rails.logger.error "Login failed: #{e.message}"
     render json: {
-      status: { code: 401, message: "Invalid email or password." }
+      status: { code: 401, message: 'Invalid email or password.' }
     }, status: :unauthorized
   end
 
@@ -39,8 +39,8 @@ class Api::V1::Readers::SessionsController < Devise::SessionsController
       exp: 1.day.from_now.to_i,
       iat: Time.current.to_i
     }
-    
+
     Rails.logger.info "Generating JWT with secret: #{ENV['DEVISE_JWT_SECRET_KEY'].present?}"
-    JWT.encode(payload, ENV['DEVISE_JWT_SECRET_KEY'], 'HS256')
+    JWT.encode(payload, ENV.fetch('DEVISE_JWT_SECRET_KEY', nil), 'HS256')
   end
 end

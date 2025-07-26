@@ -48,6 +48,9 @@ Devise.setup do |config|
   # available as additional gems.
   require 'devise/orm/active_record'
 
+  require 'omniauth-google-oauth2' # Make sure the provider is loaded
+
+
   # ==> Configuration for any authentication mechanism
   # Configure which keys are used when authenticating a user. The default is
   # just :email. You can configure it to use [:username, :subdomain], so for
@@ -312,7 +315,7 @@ Devise.setup do |config|
   #
   # When using OmniAuth, Devise cannot automatically set OmniAuth path,
   # so you need to do it manually. For the users scope, it would be:
-  # config.omniauth_path_prefix = '/my_engine/users/auth'
+  config.omniauth_path_prefix = '/api/v1/authors/auth'
 
   # ==> Hotwire/Turbo configuration
   # When using Devise with Hotwire/Turbo, the http status for error responses
@@ -323,19 +326,22 @@ Devise.setup do |config|
   config.responder.error_status = :unprocessable_entity
   config.responder.redirect_status = :see_other
 
-  config.navigational_formats = []
+  config.navigational_formats = ['*/*', :html, :json, :turbo_stream]
   # ==> Configuration for :registerable
+# Allow Devise to handle HTML requests for OmniAuth callbacks
 
   # When set to false, does not sign a user in automatically after their password is
   # changed. Defaults to true, so a user is signed in automatically after changing a password.
   # config.sign_in_after_change_password = true
-  config.omniauth :google_oauth2,
-                ENV['GOOGLE_CLIENT_ID'],
-                ENV['GOOGLE_CLIENT_SECRET'],
-                {
-                  scope: 'email,profile',
-                  prompt: 'select_account',
-                  image_aspect_ratio: 'square',
-                  image_size: 50
-                }
+config.omniauth :google_oauth2,
+  ENV['GOOGLE_CLIENT_ID'],
+  ENV['GOOGLE_CLIENT_SECRET'],
+  {
+    scope: 'email,profile',
+    prompt: 'select_account',
+    image_aspect_ratio: 'square',
+    image_size: 50,
+    redirect_uri: 'http://localhost:3000/api/v1/authors/auth/google_oauth2/callback'
+  }
 end
+
