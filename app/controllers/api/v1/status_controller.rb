@@ -1,7 +1,6 @@
 module Api
   module V1
     class StatusController < ApplicationController
-
       def index
         render json: {
           status: 'API online',

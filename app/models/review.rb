@@ -5,8 +5,8 @@ class Review < ApplicationRecord
   validate :rating_or_comment_present
 
   def rating_or_comment_present
-    if rating.blank? && comment.blank?
-      errors.add(:base, "Either rating or comment must be present")
-    end
+    return unless rating.blank? && comment.blank?
+
+    errors.add(:base, 'Either rating or comment must be present')
   end
 end
